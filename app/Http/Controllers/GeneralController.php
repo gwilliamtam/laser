@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\User;
 
 class GeneralController extends Controller
 {
@@ -12,9 +13,4 @@ class GeneralController extends Controller
         return view('test');
     }
 
-    public function hola(){
-        $hola = rand(1,100);
-        $half_hola = $hola / 2;
-        return $half_hola;
-    }
 }

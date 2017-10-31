@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Traits\CaptchaTrait;
 use App\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
@@ -21,6 +22,7 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
+    use CaptchaTrait;
 
     /**
      * Where to redirect users after registration.
@@ -47,10 +49,14 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
+        $data['captcha'] = $this->captchaCheck($data['g-recaptcha-response']);
+
         return Validator::make($data, [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'g-recaptcha-response'  => 'required',
+            'captcha'               => 'required|min:1'
         ]);
     }
 
@@ -68,4 +74,5 @@ class RegisterController extends Controller
             'password' => bcrypt($data['password']),
         ]);
     }
+
 }

@@ -31,136 +31,6 @@ function SetBoard()
 
 }
 
-function MakePieces()
-{
-    var pieces = [];
-
-    pieces.add = function(type, position, player, direction)
-    {
-        var pair = position.split(',');
-        var col = parseInt(pair[0])
-        var row = parseInt(pair[1])
-        var boardIndex = colRowToIndex(col, row);
-
-        if(boardIndex.occupiedBy == null){
-            var piece = {
-                id: config.pieceId,
-                type: type,
-                col: col,
-                row: row,
-                player: player,
-                direction: direction,
-                image: null
-            }
-            board[boardIndex].occupiedBy = piece.id;
-            config.pieceId++;
-            pieces.push(piece);
-        }
-    }
-    pieces.setImage = function(id, image)
-    {
-        pieces.forEach(function(piece,index){
-            if(piece.id == id){
-                piece.image = image;
-            }
-        })
-    }
-    return pieces;
-}
-
-function paintPiece(piece)
-{
-
-    if(piece.type == 'laser'){
-        paintLaser(piece);
-    }
-    if(piece.type == 'pole'){
-        var boardIndex = colRowToIndex(piece.col, piece.row);
-        var center = board[boardIndex].center();
-        var pieceColor;
-        if(piece.player == 'a'){
-            pieceColor = 'black';
-        }else{
-            pieceColor = 'red';
-        }
-        // var myCircle = new Path.Circle(new Point(center.x, center.y), 10);
-        // myCircle.fillColor = pieceColor;
-
-        var long = 15;
-        var pole = new Path.Arc(
-            new Point(center.x-long, center.y),
-            new Point(center.x, center.y+long),
-            new Point(center.x+long, center.y)
-        )
-        pole.fillColor = pieceColor;
-        pole.rotate(directions[piece.direction]);
-        pole.position = new Point(center.x, center.y);
-
-        pieces.setImage(piece.id, pole);
-    }
-}
-
-function rotatePole(piece, rotationDir)
-{
-    if(rotationDir == 'r'){
-        var angle = 45;
-    }else{
-        var angle = -45;
-    }
-
-    var currDirIndex = null;
-    var newDirIndex = null;
-    directionsArray.forEach(function(dir, index){
-        if(dir == piece.direction){
-            currDirIndex = index;
-        }
-    });
-    if(rotationDir == 'r'){
-        newDirIndex = currDirIndex+1;
-    }else{
-        newDirIndex = currDirIndex-1;
-    }
-    if(newDirIndex<0){
-        newDirIndex = 7;
-    }
-    if(newDirIndex>7){
-        newDirIndex = 0;
-    }
-    pieces[piece.id].direction = directionsArray[newDirIndex];
-
-    piece.image.rotate(angle);
-
-}
-
-function paintLaser(piece)
-{
-    var boardIndex = colRowToIndex(piece.col, piece.row);
-    var center = board[boardIndex].center();
-    var pieceColor;
-    if(piece.player == 'a'){
-        pieceColor = 'black';
-    }else{
-        pieceColor = 'red';
-    }
-    var centerGun = applyDirection(center.x,center.y,piece.direction);
-
-    var path = new CompoundPath({
-        children: [
-            new Path.Circle({
-                center: new Point(center.x, center.y),
-                radius: 15
-            }),
-            new Path.Circle({
-                center: new Point(centerGun.x, centerGun.y),
-                radius: 8
-            })
-        ],
-        fillColor: pieceColor
-    });
-    path.position = new Point(center);
-    pieces.setImage(piece.id, path);
-}
-
 function MakeBoard()
 {
     var sizeX = parseInt($('#myCanvas').width() / config.colsMax)-1;
@@ -171,7 +41,7 @@ function MakeBoard()
     var board = [];
     var xi = 0;
     var yi = 0;
-    var colors = ['#d0d0d0', '#f0f0f0'];
+    var colors = [config.board.color1, config.board.color2];
     var cnt = 0;
     for (var rows = 1; rows <= config.rowsMax; rows++) {
         for (var cols = 1; cols <= config.colsMax; cols++) {
@@ -225,6 +95,165 @@ function MakeSection(col, row, xi,yi,xf,yf,color)
     }
 
     return section;
+}
+
+function MakePieces()
+{
+    var pieces = [];
+
+    pieces.add = function(type, position, player, direction)
+    {
+        var pair = position.split(',');
+        var col = parseInt(pair[0])
+        var row = parseInt(pair[1])
+        var boardIndex = colRowToIndex(col, row);
+
+        if(boardIndex.occupiedBy == null){
+            var piece = {
+                id: config.pieceId,
+                type: type,
+                col: col,
+                row: row,
+                player: player,
+                direction: direction,
+                image: null
+            }
+            board[boardIndex].occupiedBy = piece.id;
+            config.pieceId++;
+            pieces.push(piece);
+        }
+    }
+    pieces.setImage = function(id, image)
+    {
+        pieces.forEach(function(piece,index){
+            if(piece.id == id){
+                piece.image = image;
+            }
+        })
+    }
+    return pieces;
+}
+
+function paintPiece(piece)
+{
+
+    if(piece.type == 'laser'){
+        paintLaser(piece);
+    }
+    if(piece.type == 'pole'){
+        var boardIndex = colRowToIndex(piece.col, piece.row);
+        var center = board[boardIndex].center();
+        var pieceColor;
+        if(piece.player == 'a'){
+            pieceColor = config.player.a.color;
+        }else{
+            pieceColor = config.player.b.color;
+        }
+
+        var long = 15;
+        var pole = new Path.Arc(
+            new Point(center.x-long, center.y),
+            new Point(center.x, center.y+long),
+            new Point(center.x+long, center.y)
+        )
+        pole.fillColor = pieceColor;
+        pole.rotate(directions[piece.direction]);
+        pole.position = new Point(center.x, center.y);
+
+        pieces.setImage(piece.id, pole);
+    }
+}
+
+function rotatePole(piece, rotationDir)
+{
+    if(rotationDir == 'r'){
+        var angle = 45;
+    }else{
+        var angle = -45;
+    }
+
+    var currDirIndex = null;
+    var newDirIndex = null;
+    directionsArray.forEach(function(dir, index){
+        if(dir == piece.direction){
+            currDirIndex = index;
+        }
+    });
+    if(rotationDir == 'r'){
+        newDirIndex = currDirIndex+1;
+    }else{
+        newDirIndex = currDirIndex-1;
+    }
+    if(newDirIndex<0){
+        newDirIndex = 7;
+    }
+    if(newDirIndex>7){
+        newDirIndex = 0;
+    }
+    pieces[piece.id].direction = directionsArray[newDirIndex];
+
+    piece.image.rotate(angle);
+
+}
+
+function rotateLaser(laser, rotationDir)
+{
+    if(rotationDir == 'r'){
+        var angle = 90;
+    }else{
+        var angle = -90;
+    }
+
+    var currDirIndex = null;
+    var newDirIndex = null;
+    directionsArray.forEach(function(dir, index){
+        if(dir == laser.direction){
+            currDirIndex = index;
+        }
+    });
+    if(rotationDir == 'r'){
+        newDirIndex = currDirIndex+2;
+    }else{
+        newDirIndex = currDirIndex-2;
+    }
+    if(newDirIndex<0){
+        newDirIndex = 6;
+    }
+    if(newDirIndex>6){
+        newDirIndex = 0;
+    }
+    pieces[laser.id].direction = directionsArray[newDirIndex];
+console.log(pieces[laser.id]);
+    laser.image.rotate(angle);
+}
+
+function paintLaser(piece)
+{
+    var boardIndex = colRowToIndex(piece.col, piece.row);
+    var center = board[boardIndex].center();
+    var pieceColor;
+    if(piece.player == 'a'){
+        pieceColor = config.player.a.color;
+    }else{
+        pieceColor = config.player.b.color;
+    }
+    var centerGun = applyDirection(center.x,center.y,piece.direction);
+
+    var path = new CompoundPath({
+        children: [
+            new Path.Circle({
+                center: new Point(center.x, center.y),
+                radius: 15
+            }),
+            new Path.Circle({
+                center: new Point(centerGun.x, centerGun.y),
+                radius: 8
+            })
+        ],
+        fillColor: pieceColor
+    });
+    path.position = new Point(center);
+    pieces.setImage(piece.id, path);
 }
 
 function applyDirection(x,y,direction)
@@ -359,7 +388,11 @@ function drawLaser()
     laserPaths.forEach(function(laserPath){
         laserPath.strokeColor.hue += 1;
     });
+    laserOthers.forEach(function(other){
+        other.image.fillColor.hue = laserPaths[0].strokeColor.hue;
+    });
 }
+
 
 function laserNextColRow(col,row,direction)
 {
@@ -417,17 +450,27 @@ function fire(player)
                     laserSegment++;
                     calculateTrack = true;
                 }else{
-                    if(pieces[boardSection.occupiedBy].type == 'laser' && pieces[boardSection.occupiedBy].player != player){
-                        console.log('TARGET!');
+                    if(pieces[boardSection.occupiedBy].type == 'laser'){
+                        laserOthers.push(pieces[boardSection.occupiedBy]);
+                        if(pieces[boardSection.occupiedBy].player == player){
+                            console.log('Player '+pieces[boardSection.occupiedBy].player+' auto destroyed!');
+                        }else{
+                            console.log('Player '+pieces[boardSection.occupiedBy].player+' destroyed!');
+                        }
+
                     }
                     if(pieces[boardSection.occupiedBy].type == 'pole'){
                         laserDirection = changeLaserDirection(laserDirection, pieces[boardSection.occupiedBy].direction);
+                        laserOthers.push(pieces[boardSection.occupiedBy]);
                     }
                     if(laserDirection != null){
-
                         laserPaths.push(calcLaserPath(prev, next));
                         laserSegment++;
                         calculateTrack = true;
+                    }else{
+                        laserPaths.push(calcLaserPath(prev, next));
+                        laserSegment++;
+                        calculateTrack = false;
                     }
                 }
 
@@ -438,6 +481,7 @@ function fire(player)
             prev = next;
         }
     }
+    console.log(laserPaths, laserOthers);
     return laserPaths;
 
 }
@@ -449,8 +493,8 @@ function calcLaserPath(prev, next)
     var laserPath = new Path.Line({
         from: new Point(segmentStart),
         to: new Point(segmentEnd),
-        strokeColor: 'red',
-        strokeWidth: 5
+        strokeColor: config.laser.color,
+        strokeWidth: config.laser.width
     });
     return laserPath;
 }
@@ -474,6 +518,10 @@ function offLaser(listPaths)
             path.remove();
         })
     }
+    laserOthers.forEach(function(piece){
+        piece.image.fillColor = config.player[piece.player].color;
+    });
+    laserOthers = [];
 
 }
 
@@ -497,18 +545,13 @@ function MakePoleControls()
     var left = new Path.RegularPolygon(new Point(center.x-15,center.y), 3, 10);
     left.rotate(-90);
     left.fillColor = 'black';
-    // left.visible = false;
     left.position =new Point(center.x-15, center.y-12);
-    // left.fillColor.alpha = 0.5;
 
     var right = new Path.RegularPolygon(new Point(center.x+15, center.y), 3, 10);
     right.rotate(90);
     right.fillColor = 'black';
-    // right.visible = false;
     right.position = new Point(center.x+15, center.y-12);
-    // right.fillColor.alpha = 0.5;
 
-    // left.moveAbove(bg);
     right.moveAbove(bg);
 
     var controlBoard = new Group([bg, left, right]);
@@ -517,16 +560,64 @@ function MakePoleControls()
     return controlBoard;
 }
 
-function showControl(piece, poleControls)
+function MakeLaserControls()
 {
-    var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
-    console.log(poleControls,controlsCenter);
-    poleControls.position = new Point(controlsCenter.x, controlsCenter.y);
-    poleControls.visible = true;
-    poleControls.moveAbove(piece.image);
+    project.activeLayer = 2;
+    var rect = new Rectangle(new Point(1,1), new Point(config.sectionWidth-1,config.sectionHeight-1));
+    var bg = new Path.Rectangle(rect);
+    bg.fillColor = 'white';
+    bg.stokeColor = 'black';
+    bg.fillColor.alpha = 0.5;
+
+    center = {
+        x: parseInt((config.sectionWidth)/2)+1,
+        y: parseInt((config.sectionHeight)/2)+1
+    }
+
+    // var left = new Raster('/img/rotate_left.png');
+    // left.scale(0.05);
+
+    var left = new Path.RegularPolygon(new Point(center.x-15,center.y), 3, 10);
+    left.rotate(-90);
+    left.fillColor = 'black';
+    left.position =new Point(center.x-15, center.y-12);
+
+    var right = new Path.RegularPolygon(new Point(center.x+15, center.y), 3, 10);
+    right.rotate(90);
+    right.fillColor = 'black';
+    right.position = new Point(center.x+15, center.y-12);
+
+    var fireButton = new Path.Rectangle(new Point(center.x+7, center.y+7), new Point(center.x-7, center.y-7));
+    fireButton.fillColor = 'black';
+    fireButton.position = new Point(center.x, center.y+12);
+
+    right.moveAbove(bg);
+
+    var controlBoard = new Group([bg, left, right, fireButton]);
+    controlBoard.visible = false;
+
+    return controlBoard;
 }
 
-function hidePoleControl()
+function showControl(piece, controls)
 {
-    poleControls.visible = false;
+    hideControls(controls);
+    var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
+    if(piece.type == 'pole'){
+        controls.pole.position = new Point(controlsCenter.x, controlsCenter.y);
+        controls.pole.visible = true;
+        controls.pole.moveAbove(piece.image);
+    }
+    if(piece.type == 'laser'){
+        controls.laser.position = new Point(controlsCenter.x, controlsCenter.y);
+        controls.laser.visible = true;
+        controls.laser.moveAbove(piece.image);
+    }
+
+}
+
+function hideControls(controls)
+{
+    controls.pole.visible = false;
+    controls.laser.visible = false;
 }

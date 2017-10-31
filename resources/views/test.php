@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Game</title>
+    <link rel="stylesheet" type="text/css" href="/css/game.css">
     <!-- Load the Paper.js library -->
     <script type="text/javascript" src="/js/paper-full.js"></script>
     <!-- Define inlined PaperScript associate it with myCanvas -->
@@ -10,67 +12,11 @@
         integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
         crossorigin="anonymous"></script>
 
+    <script type="text/javascript" src="/js/game-config.js"></script>
     <script type="text/javascript" src="/js/game-parts.js"></script>
-    <div class="fire-container">
-        <button class="fire">Fire</button>
-        <button class="stop">Stop</button>
-    </div>
 
     <script type="text/javascript" canvas="myCanvas">
 
-        var board;
-        var pieces;
-        var config = {
-            pieceId: 0,
-            colsMax: 10,
-            rowsMax: 10,
-            sectionWidth: null,
-            sectionHeight: null
-        }
-        var directions = {
-            n: 0,
-            ne: 45,
-            e: 90,
-            se: 135,
-            s: 180,
-            sw: 225,
-            w: 270,
-            nw: 315
-        };
-        var directionsArray = [];
-        for(var key in directions){
-            directionsArray.push(key);
-        }
-        var laserPaths = null;
-        var laserOn = null;
-        var laserStop = null;
-        var draggingPiece = false;
-        var moves = {
-            a: 0,
-            b: 0
-        }
-        var laserDirectionChanges = {
-            n: {
-                's': 's',
-                'se': 'e',
-                'sw': 'w'
-            },
-            s:{
-                'n': 'n',
-                'ne': 'e',
-                'nw': 'w',
-            },
-            e:{
-                'w': 'w',
-                'nw': 'n',
-                'sw': 's'
-            },
-            w:{
-                'e': 'e',
-                'ne': 'n',
-                'se': 's'
-            }
-        };
         // Make the paper scope global, by injecting it into window:
         paper.install(window);
         window.onload = function() {
@@ -78,8 +24,11 @@
             // Setup directly from canvas id:
             board = SetBoard();
 
-            var poleControls = MakePoleControls();
-            console.log(poleControls);
+            var controls = {
+                pole: MakePoleControls(),
+                laser: MakeLaserControls()
+            };
+            console.log(controls);
 
             pieces = new MakePieces();
             pieces.add('laser','1,1','a','s');
@@ -92,6 +41,16 @@
             pieces.add('pole','8,1','a', 's');
             pieces.add('pole','9,1','a', 's');
             pieces.add('pole','10,1','a', 's');
+            pieces.add('pole','1,2','a','s');
+            pieces.add('pole','2,2','a', 's');
+            pieces.add('pole','3,2','a', 's');
+            pieces.add('pole','4,2','a', 's');
+            pieces.add('pole','5,2','a', 's');
+            pieces.add('pole','6,2','a', 's');
+            pieces.add('pole','7,2','a', 's');
+            pieces.add('pole','8,2','a', 's');
+            pieces.add('pole','9,2','a', 's');
+            pieces.add('pole','10,2','a', 's');
 
             pieces.add('pole','1,'+config.rowsMax.toString(),'b','n');
             pieces.add('pole','2,'+config.rowsMax.toString(),'b', 'n');
@@ -103,6 +62,17 @@
             pieces.add('pole','8,'+config.rowsMax.toString(),'b', 'n');
             pieces.add('pole','9,'+config.rowsMax.toString(),'b', 'n');
             pieces.add('laser','10,'+config.rowsMax.toString(),'b', 'n');
+            var row = config.rowsMax-1;
+            pieces.add('pole','1,'+row.toString(),'b','n');
+            pieces.add('pole','2,'+row.toString(),'b', 'n');
+            pieces.add('pole','3,'+row.toString(),'b', 'n');
+            pieces.add('pole','4,'+row.toString(),'b', 'n');
+            pieces.add('pole','5,'+row.toString(),'b', 'n');
+            pieces.add('pole','6,'+row.toString(),'b', 'n');
+            pieces.add('pole','7,'+row.toString(),'b', 'n');
+            pieces.add('pole','8,'+row.toString(),'b', 'n');
+            pieces.add('pole','9,'+row.toString(),'b', 'n');
+            pieces.add('pole','10,'+row.toString(),'b', 'n');
 
             pieces.forEach(function(piece){
                 paintPiece(piece);
@@ -120,20 +90,39 @@
                     }else{
                         if(piece.type == 'pole'){
                             offLaser(laserPaths);
-                            showControl(piece, poleControls);
-                            poleControls.children[0].onClick = function(event){
-                                poleControls.visible = false;
+                            showControl(piece, controls);
+                            controls.pole.children[0].onClick = function(event){
+                                hideControls(controls);
                             }
-                            poleControls.children[1].onClick = function(event){
+                            controls.pole.children[1].onClick = function(event){
                                 rotatePole(piece,'l');
                             }
-                            poleControls.children[2].onClick = function(event){
+                            controls.pole.children[2].onClick = function(event){
                                 rotatePole(piece,'r');
                             }
                         }
                         if(piece.type == 'laser'){
-                            poleControls.visible = false;
-                            laserOn = piece.player;
+                            offLaser(laserPaths);
+                            showControl(piece, controls);
+                            controls.laser.children[0].onClick = function(event){
+                                hideControls(controls);
+                            }
+                            controls.laser.children[1].onClick = function(event){
+                                rotateLaser(piece, 'l');
+                            }
+                            controls.laser.children[2].onClick = function(event){
+                                rotateLaser(piece, 'r');
+                            }
+                            controls.laser.children[3].onClick = function(event){
+                                if(draggingPiece){
+                                    draggingPiece = false;
+                                }else {
+                                    if (piece.type == 'laser') {
+                                        hideControls(controls);
+                                        laserOn = piece.player;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -157,14 +146,12 @@
                 };
             });
 
-//            board.forEach(section, index){
-//                section.
-//            }
-console.log(board);
             view.onFrame = onFrame;
 
             function onFrame(event) {
                 var second = parseInt(event.time);
+                var decasecond = parseInt(event.time*10);
+//                console.log(second, decasecond, event.time);
 
                 if(laserOn !== null && laserStop === null){
                     laserPaths = fire(laserOn);
@@ -179,16 +166,8 @@ console.log(board);
 
                 if(laserPaths != null){
                     drawLaser();
-
                 }
             }
-
-            $('.fire').on('click', function(){
-                laserPaths = fire('a');
-            })
-            $('.stop').on('click', function(){
-               offLaser(laserPaths);
-            })
 
         }
 
@@ -209,46 +188,7 @@ console.log(board);
 </div>
 
 <style>
-    body{
-        margin: 0;
-        width: 100vw;
-        height: 100vh;
-    }
 
-    .score-board{
-        width: 100%;
-    }
-    .player-board{
-        width: 50%;
-        text-align: center;
-    }
-    .player-a{
-        float: left;
-    }
-    .player-b{
-        float: right;
-    }
-
-    .fire-container{
-        width: 100%;
-        height: 100px;
-        text-align: center;
-    }
-    .fire{
-        margin-top: 50px;
-    }
-    .canvas-container{
-        padding: 0;
-        margin: 0 auto;
-        width: 75%;
-        height: 75%;
-        min-width: 500px;
-        min-height: 500px;
-    }
-    canvas {
-        width: 100%;
-        height: 100%;
-    }
 </style>
 </body>
 </html>
