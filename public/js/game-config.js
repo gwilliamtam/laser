@@ -1,28 +1,5 @@
 var board;
 var pieces;
-var config = {
-    pieceId: 0,
-    colsMax: 10,
-    rowsMax: 10,
-    sectionWidth: null,
-    sectionHeight: null,
-    board: {
-        color1: '#d0d0d0',
-        color2: '#f0f0f0'
-    },
-    player:{
-        a: {
-            color: 'blue'
-        },
-        b: {
-            color: 'red'
-        }
-    },
-    laser: {
-        color: 'yellow',
-        width: 3
-    }
-}
 var directions = {
     n: 0,
     ne: 45,

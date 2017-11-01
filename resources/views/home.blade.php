@@ -14,7 +14,9 @@
                         </div>
                     @endif
 
-                    You are logged in! {{ session('status') }}
+                        <a type="button" class="btn btn-primary btn-lg btn-block" href="{!! route('createGame') !!}">Create a Game</a>
+                        <a type="button" class="btn btn-primary btn-lg btn-block">Go to existent game</a>
+
                 </div>
             </div>
         </div>

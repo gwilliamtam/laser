@@ -33,12 +33,30 @@ body{
 .canvas-container{
     padding: 0;
     margin: auto auto;
-    width: 75%;
-    height: 75%;
+
+}
+canvas {
+    width: 600px;
+    height: 600px;
     min-width: 500px;
     min-height: 500px;
 }
-canvas {
-    width: 100%;
-    height: 100%;
+
+.link-copied{
+    background-color: #fff;
+    border: 1px solid rgba(255, 0, 0, 0.75) !important;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.075) !important;
+}
+
+.copy-link-container{
+    display: none;
+}
+
+#game-exists{
+    display: none;
+    margin-top: 50px;
+}
+
+#goto-game-container{
+    margin-top: 20px;
 }
