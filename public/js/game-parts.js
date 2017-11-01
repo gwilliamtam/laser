@@ -101,11 +101,8 @@ function MakePieces()
 {
     var pieces = [];
 
-    pieces.add = function(type, position, player, direction)
+    pieces.add = function(type, col, row, player, direction)
     {
-        var pair = position.split(',');
-        var col = parseInt(pair[0])
-        var row = parseInt(pair[1])
         var boardIndex = colRowToIndex(col, row);
 
         if(boardIndex.occupiedBy == null){
@@ -125,7 +122,7 @@ function MakePieces()
     }
     pieces.setImage = function(id, image)
     {
-        pieces.forEach(function(piece,index){
+        pieces.forEach(function(piece){
             if(piece.id == id){
                 piece.image = image;
             }
@@ -140,7 +137,7 @@ function paintPiece(piece)
     if(piece.type == 'laser'){
         paintLaser(piece);
     }
-    if(piece.type == 'pole'){
+    if(piece.type == 'mirror'){
         var boardIndex = colRowToIndex(piece.col, piece.row);
         var center = board[boardIndex].center();
         var pieceColor;
@@ -151,20 +148,20 @@ function paintPiece(piece)
         }
 
         var long = 15;
-        var pole = new Path.Arc(
+        var mirror = new Path.Arc(
             new Point(center.x-long, center.y),
             new Point(center.x, center.y+long),
             new Point(center.x+long, center.y)
         )
-        pole.fillColor = pieceColor;
-        pole.rotate(directions[piece.direction]);
-        pole.position = new Point(center.x, center.y);
+        mirror.fillColor = pieceColor;
+        mirror.rotate(directions[piece.direction]);
+        mirror.position = new Point(center.x, center.y);
 
-        pieces.setImage(piece.id, pole);
+        pieces.setImage(piece.id, mirror);
     }
 }
 
-function rotatePole(piece, rotationDir)
+function rotatemirror(piece, rotationDir)
 {
     if(rotationDir == 'r'){
         var angle = 45;
@@ -459,7 +456,7 @@ function fire(player)
                         }
 
                     }
-                    if(pieces[boardSection.occupiedBy].type == 'pole'){
+                    if(pieces[boardSection.occupiedBy].type == 'mirror'){
                         laserDirection = changeLaserDirection(laserDirection, pieces[boardSection.occupiedBy].direction);
                         laserOthers.push(pieces[boardSection.occupiedBy]);
                     }
@@ -499,11 +496,11 @@ function calcLaserPath(prev, next)
     return laserPath;
 }
 
-function changeLaserDirection(laserDirection, poleDirection)
+function changeLaserDirection(laserDirection, mirrorDirection)
 {
     var group = laserDirectionChanges[laserDirection];
-    if(group.hasOwnProperty(poleDirection)){
-        return group[poleDirection];
+    if(group.hasOwnProperty(mirrorDirection)){
+        return group[mirrorDirection];
     }else
     {
         return null;
@@ -525,7 +522,7 @@ function offLaser(listPaths)
 
 }
 
-function MakePoleControls()
+function MakemirrorControls()
 {
     project.activeLayer = 2;
     var rect = new Rectangle(new Point(1,1), new Point(config.sectionWidth-1,config.sectionHeight-1));
@@ -603,10 +600,10 @@ function showControl(piece, controls)
 {
     hideControls(controls);
     var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
-    if(piece.type == 'pole'){
-        controls.pole.position = new Point(controlsCenter.x, controlsCenter.y);
-        controls.pole.visible = true;
-        controls.pole.moveAbove(piece.image);
+    if(piece.type == 'mirror'){
+        controls.mirror.position = new Point(controlsCenter.x, controlsCenter.y);
+        controls.mirror.visible = true;
+        controls.mirror.moveAbove(piece.image);
     }
     if(piece.type == 'laser'){
         controls.laser.position = new Point(controlsCenter.x, controlsCenter.y);
@@ -618,6 +615,6 @@ function showControl(piece, controls)
 
 function hideControls(controls)
 {
-    controls.pole.visible = false;
+    controls.mirror.visible = false;
     controls.laser.visible = false;
 }
