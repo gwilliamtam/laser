@@ -263,10 +263,10 @@ function applyDirection(x,y,direction)
         return {x:x, y:y+gap};
     }
     if(direction=='e'){
-        return {x:x-gap, y:y};
+        return {x:x+gap, y:y};
     }
     if(direction=='w'){
-        return {x:x+gap, y:y};
+        return {x:x-gap, y:y};
     }
 }
 
@@ -284,6 +284,18 @@ function indexToColRow(index)
         row: row,
         col: col
     }
+}
+
+function getIndexByPieceId(id)
+{
+    var indexFound = null;
+    pieces.forEach(function(piece, index){
+       if(piece.id == id){
+           indexFound = index;
+           return false;
+       }
+    });
+    return indexFound;
 }
 
 function movePiece(index, piece, delta)
@@ -342,7 +354,44 @@ function saveMove(index)
 
 }
 
-function dropPiece(index, piece, newBoardPosition)
+function cycleTasks()
+{
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    var sendData = {
+        gameId: config.id,
+        gameName: config.name
+    };
+    console.log('sendData',sendData);
+    $.post('/games/cycle', sendData, function(returnDataJson){
+        var returnData = JSON.parse(returnDataJson);
+        // console.log(returnData);
+        if(returnData.complete == 'true'){
+            changePosition(returnData.lastMove);
+        }
+    });
+}
+
+function changePosition(lastMove)
+{
+    console.log(lastMove);
+    var index = getIndexByPieceId(lastMove.piece_id);
+    console.log(lastMove.piece_id,index);
+    piece = pieces[index];
+    if(piece.col != lastMove.position.col || piece.row != lastMove.position.row){
+        console.log('la direccion de la pieza '+piece.id+' ha cambiado');
+        dropPiece(index, piece, colRowToIndex(lastMove.position.col,lastMove.position.row), false);
+    }
+    if(piece.direction != lastMove.position.direction){
+
+    }
+}
+
+function dropPiece(index, piece, newBoardPosition, save)
 {
     var piecePosition = colRowToIndex(piece.col, piece.row);
     board[piecePosition].occupiedBy = null;
@@ -355,7 +404,9 @@ function dropPiece(index, piece, newBoardPosition)
     pieces[index].row = board[newBoardPosition].row;
     var center = board[newBoardPosition].center();
     pieces[index].image.position = new Point(center.x, center.y);
-    saveMove(index);
+    if(save){
+        saveMove(index);
+    }
 
 }
 

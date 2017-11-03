@@ -5,6 +5,7 @@
         <script type="text/javascript" src="/js/paper-full.js"></script>
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');
+            var cycleExpire = config.cycle;
             console.log("config", config)
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
@@ -37,70 +38,72 @@
                 });
                 pieces.forEach(function(piece,index)
                 {
-                    laserPaths = null;
-                    pieces[index].image.onClick = function(event){
-//                    console.log('click on piece');
+                    if(piece.player == "{{ $player }}") {
+                        laserPaths = null;
+                        pieces[index].image.onClick = function (event) {
+//                        console.log('click on piece');
 
-                        if(draggingPiece){
-                            draggingPiece = false;
-                        }else{
-                            if(piece.type == 'mirror'){
-                                offLaser(laserPaths);
-                                showControl(piece, controls);
-                                controls.mirror.children[0].onClick = function(event){
-                                    hideControls(controls);
+                            if (draggingPiece) {
+                                draggingPiece = false;
+                            } else {
+                                if (piece.type == 'mirror') {
+                                    offLaser(laserPaths);
+                                    showControl(piece, controls);
+                                    controls.mirror.children[0].onClick = function (event) {
+                                        hideControls(controls);
+                                    }
+                                    controls.mirror.children[1].onClick = function (event) {
+                                        rotateMirror(index, piece, 'l');
+                                    }
+                                    controls.mirror.children[2].onClick = function (event) {
+                                        rotateMirror(index, piece, 'r');
+                                    }
                                 }
-                                controls.mirror.children[1].onClick = function(event){
-                                    rotateMirror(index,piece,'l');
-                                }
-                                controls.mirror.children[2].onClick = function(event){
-                                    rotateMirror(index,piece,'r');
-                                }
-                            }
-                            if(piece.type == 'laser'){
-                                offLaser(laserPaths);
-                                showControl(piece, controls);
-                                controls.laser.children[0].onClick = function(event){
-                                    hideControls(controls);
-                                }
-                                controls.laser.children[1].onClick = function(event){
-                                    rotateLaser(index,piece, 'l');
-                                }
-                                controls.laser.children[2].onClick = function(event){
-                                    rotateLaser(index,piece, 'r');
-                                }
-                                controls.laser.children[3].onClick = function(event){
-                                    if(draggingPiece){
-                                        draggingPiece = false;
-                                    }else {
-                                        if (piece.type == 'laser') {
-                                            hideControls(controls);
-                                            laserOn = piece.player;
+                                if (piece.type == 'laser') {
+                                    offLaser(laserPaths);
+                                    showControl(piece, controls);
+                                    controls.laser.children[0].onClick = function (event) {
+                                        hideControls(controls);
+                                    }
+                                    controls.laser.children[1].onClick = function (event) {
+                                        rotateLaser(index, piece, 'l');
+                                    }
+                                    controls.laser.children[2].onClick = function (event) {
+                                        rotateLaser(index, piece, 'r');
+                                    }
+                                    controls.laser.children[3].onClick = function (event) {
+                                        if (draggingPiece) {
+                                            draggingPiece = false;
+                                        } else {
+                                            if (piece.type == 'laser') {
+                                                hideControls(controls);
+                                                laserOn = piece.player;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    pieces[index].image.onMouseDown = function(event){
-                        var newBoardPosition = null;
-                        pieces[index].image.onMouseDrag = function(event){
-                            draggingPiece = true;
+                        pieces[index].image.onMouseDown = function (event) {
+                            var newBoardPosition = null;
+                            pieces[index].image.onMouseDrag = function (event) {
+                                draggingPiece = true;
 //                        console.log('dragging piece');
-                            newBoardPosition = movePiece(index, piece, event.delta);
-                        }
-                        pieces[index].image.onMouseUp = function(event){
-
-                            offLaser(laserPaths);
-                            if(newBoardPosition != null){
-//                                console.log('about to drop');
-                                dropPiece(index, piece, newBoardPosition);
+                                newBoardPosition = movePiece(index, piece, event.delta);
                             }
+                            pieces[index].image.onMouseUp = function (event) {
+
+                                offLaser(laserPaths);
+                                if (newBoardPosition != null) {
+//                                console.log('about to drop');
+                                    dropPiece(index, piece, newBoardPosition, true);
+                                }
 
 //                        console.log('piece dropped '+newBoardPosition);
+                            }
                         }
-                    };
+                    }
                 });
 
                 view.onFrame = onFrame;
@@ -124,6 +127,11 @@
                     if(laserPaths != null){
                         drawLaser();
                     }
+
+                    if(second>=cycleExpire){
+                        cycleExpire = cycleExpire + config.cycle;
+                        cycleTasks();
+                    }
                 }
 
             }
@@ -133,10 +141,10 @@
 
         <div class="score-board">
             <div class="player-board player-a">
-                Player A Moves <span class="moves">0</span>
+                Player A Moves <span class="moves">{{$movesA}}</span>
             </div>
             <div class="player-board player-b">
-                Player B Moves <span class="moves">0</span>
+                Player B Moves <span class="moves">{{$movesB}}</span>
             </div>
         </div>
         <div class="canvas-container text-center">

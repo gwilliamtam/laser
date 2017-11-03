@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Game;
+use Auth;
 
 class HomeController extends Controller
 {
@@ -23,6 +25,19 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+
+        $queryGames = Game::where('player_a_id','=', Auth::user()->id)
+            ->orWhere('player_b_id','=', Auth::user()->id)
+            ->orderby('name');
+
+        if($queryGames->count()>0){
+            $games = $queryGames->get();
+        }else{
+            $games = null;
+        }
+
+        return view('home', [
+            "games" => $games
+        ]);
     }
 }

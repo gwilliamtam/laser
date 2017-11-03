@@ -15,9 +15,24 @@
                     @endif
 
                         <a type="button" class="btn btn-primary btn-lg btn-block" href="{!! route('createGame') !!}">Create a Game</a>
+
+                    @if(!empty($games))
                         <a type="button" class="btn btn-primary btn-lg btn-block">Go to existent game</a>
+                    @endif
 
                 </div>
+
+                @if(!empty($games))
+                <div class="panel-body">
+                    <div class="list-group">
+                    @foreach($games as $game)
+                        <a class="list-group-item" href="{!! url('/') !!}/play/{{$game->name}}">
+                            {{ $game->name }}
+                        </a>
+                    @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

@@ -8,10 +8,15 @@ use URL;
 use App\Models\Game;
 use App\Models\Piece;
 use App\Models\Move;
+use Auth;
 
 
 class GameController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
 
     protected function redirectTo()
     {
@@ -47,16 +52,31 @@ class GameController extends Controller
     public function playGame(Request $request)
     {
         $query = Game::where('name','=', $request->gameName);
-        if($query->count()>0){
-            $game = $query->first();;
+        if($query->count()>0) {
+            $game = $query->first();
 
-            $loadPieces = $game->loadPieces();
-//dd(($game->setup));
-            return view('games.play', [
-                'config' => $game->setup,
-                'pieces' => json_encode($loadPieces)
-            ]);
+            // user not belong to this game
+            if ($game->userBelongsToGame()) {
+                $loadPieces = $game->loadPieces();
+                list($movesA, $movesB) = $game->getTotalMoves();
 
+                $player = 'other';
+                if($game->player_a_id == Auth::user()->id){
+                    $player = 'a';
+                }
+                if($game->player_b_id == Auth::user()->id){
+                    $player = 'b';
+                }
+                return view('games.play', [
+                    'config' => $game->setup,
+                    'pieces' => json_encode($loadPieces),
+                    'player' => $player,
+                    'movesA' => $movesA,
+                    'movesB' => $movesB,
+                ]);
+            } else {
+                return redirect()->route('home');
+            }
         }
 
         return view('games.game-not-exist', [
@@ -82,6 +102,7 @@ class GameController extends Controller
 
             $move = new Move;
             $move->game_id = $piece->game_id;
+            $move->player = $movePiece->player;
             $move->piece_id = $piece->id;
             $move->created_at = date("Y-m-d H:i:s");
             $move->position = $json_position;
@@ -91,6 +112,25 @@ class GameController extends Controller
         }
 
         return 'false';
+    }
+
+    public function cyclePost(Request $request)
+    {
+        $queryMove = Move::where('game_id', '=',$request->gameId)->orderBy('created_at','desc')->limit(1);
+        if($queryMove->count()>0){
+            $lastMove = $queryMove->get()->toArray()[0];
+            $position = json_decode($lastMove['position']);
+            $lastMove['position'] = $position;
+        }else{
+            $lastMove = null;
+        }
+
+        $response = [
+            "complete" => "true",
+            "lastMove" => $lastMove
+        ];
+        return json_encode($response);
+
     }
 
 }

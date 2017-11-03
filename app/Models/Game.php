@@ -8,11 +8,14 @@ use App\Models\SetupPiece;
 use App\Models\GameSetup;
 use App\Models\Move;
 use Log;
+use DB;
 
 class Game extends Model
 {
     protected $table = "games";
     public $timestamps = false;
+
+    protected $redirectTo = '/';
 
     public function exists($gameName){
         $query = $this->where('name', '=', $gameName);
@@ -27,8 +30,10 @@ class Game extends Model
         $this->name = $gameName;
         $this->player_a_id = $userId;
         $this->player_b_id = null;
+        $this->setup = "default";
+        $this->save();
 
-        $gameSetup = new GameSetup($gameName);
+        $gameSetup = new GameSetup($gameName, $this->id);
         $this->setup = json_encode($gameSetup->config);
 
         if($this->save()){
@@ -87,6 +92,37 @@ class Game extends Model
         };
         return $returnPieces;
 
+    }
+
+    public function getTotalMoves()
+    {
+
+        $queryMoves = Move::where('game_id','=',$this->id)
+            ->select('player', DB::raw('count(*)'))
+            ->groupBy('player')
+            ->orderBy('player');
+
+        if($queryMoves->count()==0){
+            return [0,0];
+        }else{
+            $moves = $queryMoves->get()->toArray();
+        }
+    }
+
+    public function userBelongsToGame()
+    {
+        $userId = Auth::user()->id;
+
+        if($this->player_a_id == $userId or $this->player_b_id == $userId){
+            return true;
+        }
+
+        if(empty($this->player_b_id)){
+            $this->player_b_id = $userId;
+            $this->save();
+        }
+
+        return false;
     }
 
 }

@@ -61,6 +61,7 @@
 
                                     <li><a href="">Restart Game</a></li>
                                     <li><a href="{{ route('createGame') }}">Create Game</a></li>
+                                    <li><a href="{{ route('home') }}">List Running Games</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">
@@ -87,6 +88,12 @@
                 </div>
             </div>
         </nav>
+
+        @if(session()->has('message'))
+        <div class="alert alert-success" role="alert">
+            {{ session('message') }}
+        </div>
+        @endif
 
         @yield('content')
     </div>

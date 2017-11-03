@@ -12,9 +12,10 @@ class GameSetup
     public $id = null;
     public $game = null;
 
-    public function __construct($game)
+    public function __construct($game, $id)
     {
         $this->name = $game;
+        $this->id = $id;
         $this->initialSetup();
     }
 
@@ -22,6 +23,8 @@ class GameSetup
     {
         $this->config = array (
             'name' => $this->name,
+            'id' => $this->id,
+            'cycle' => 5,
             'pieceId' => 0,
             'colsMax' => 10,
             'rowsMax' => 10,

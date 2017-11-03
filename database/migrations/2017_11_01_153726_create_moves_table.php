@@ -17,6 +17,7 @@ class CreateMovesTable extends Migration
             $table->increments('id');
             $table->integer('game_id');
             $table->string('piece_id', 10);
+            $table->char('player', 1);
             $table->timestamp('created_at');
             $table->longText('position'); // json with {col: int, row: int, direction: char}
             $table->index(['game_id','piece_id']);
