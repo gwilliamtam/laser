@@ -24,7 +24,7 @@ class GameSetup
         $this->config = array (
             'name' => $this->name,
             'id' => $this->id,
-            'cycle' => 5,
+            'cycle' => 3,
             'pieceId' => 0,
             'colsMax' => 10,
             'rowsMax' => 10,

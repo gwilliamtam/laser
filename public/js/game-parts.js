@@ -37,6 +37,9 @@ function MakeBoard()
     var sizeY = parseInt($('#myCanvas').height() / config.rowsMax)-1;
     config.sectionWidth = sizeX;
     config.sectionHeight = sizeY;
+    sizes.laser.radius = parseInt(sizeX/3);
+    sizes.laser.gunRadius = parseInt(sizeX/4);
+    sizes.mirror.radius = parseInt(sizeX/3);
 
     var board = [];
     var xi = 0;
@@ -147,7 +150,7 @@ function paintPiece(index, piece)
             pieceColor = config.player.b.color;
         }
 
-        var long = 15;
+        var long = sizes.mirror.radius;
         var mirror = new Path.Arc(
             new Point(center.x-long, center.y),
             new Point(center.x, center.y+long),
@@ -160,7 +163,7 @@ function paintPiece(index, piece)
     }
 }
 
-function rotateMirror(pieceIndex, piece, rotationDir)
+function rotateMirror(pieceIndex, piece, rotationDir, save)
 {
     if(rotationDir == 'r'){
         var angle = 45;
@@ -189,10 +192,12 @@ function rotateMirror(pieceIndex, piece, rotationDir)
     pieces[pieceIndex].direction = directionsArray[newDirIndex];
 
     piece.image.rotate(angle);
-    saveMove(pieceIndex);
+    if(save){
+        saveMove(pieceIndex);
+    }
 }
 
-function rotateLaser(pieceIndex, laser, rotationDir)
+function rotateLaser(pieceIndex, laser, rotationDir, save)
 {
     if(rotationDir == 'r'){
         var angle = 90;
@@ -221,7 +226,9 @@ function rotateLaser(pieceIndex, laser, rotationDir)
     pieces[pieceIndex].direction = directionsArray[newDirIndex];
 console.log("rotationDir", rotationDir, "newDirIndex", newDirIndex, "direction", pieces[pieceIndex].direction, "piece", pieces[pieceIndex]);
     laser.image.rotate(angle);
-    saveMove(pieceIndex);
+    if(save){
+        saveMove(pieceIndex);
+    }
 }
 
 function paintLaser(index, piece)
@@ -234,17 +241,17 @@ function paintLaser(index, piece)
     }else{
         pieceColor = config.player.b.color;
     }
-    var centerGun = applyDirection(center.x,center.y,piece.direction);
+    var centerGun = applyDirection(center.x,center.y,piece.direction, parseInt(sizes.laser.radius*.7));
 
     var path = new CompoundPath({
         children: [
             new Path.Circle({
                 center: new Point(center.x, center.y),
-                radius: 15
+                radius: sizes.laser.radius
             }),
             new Path.Circle({
                 center: new Point(centerGun.x, centerGun.y),
-                radius: 8
+                radius: sizes.laser.gunRadius
             })
         ],
         fillColor: pieceColor
@@ -253,9 +260,8 @@ function paintLaser(index, piece)
     pieces.setImage(index, path);
 }
 
-function applyDirection(x,y,direction)
+function applyDirection(x,y,direction, gap)
 {
-    var gap = 15;
     if(direction=='n'){
         return {x:x, y:y-gap};
     }
@@ -371,8 +377,8 @@ function cycleTasks()
         var returnData = JSON.parse(returnDataJson);
         // console.log(returnData);
         if(returnData.complete == 'true'){
-            changePosition(returnData.lastMove);
-            playerInTurn = nextInTurn(returnData.lastMove.player);
+            changePosition(returnData.lastMoves);
+            playerInTurn = nextInTurn(returnData.lastMoves[0].player);
             console.log("player in turn", playerInTurn)
         }
     });
@@ -390,19 +396,22 @@ function nextInTurn(lastPlayer){
     return nextPlayer;
 }
 
-function changePosition(lastMove)
+function changePosition(lastMoves)
 {
-    console.log(lastMove);
-    var index = getIndexByPieceId(lastMove.piece_id);
-    console.log(lastMove.piece_id,index);
-    piece = pieces[index];
-    if(piece.col != lastMove.position.col || piece.row != lastMove.position.row){
-        console.log('la direccion de la pieza '+piece.id+' ha cambiado');
-        dropPiece(index, piece, colRowToIndex(lastMove.position.col,lastMove.position.row), false);
-    }
-    if(piece.direction != lastMove.position.direction){
+    console.log(lastMoves);
+    lastMoves.forEach(function(lastMove){
+        var pieceIndex = getIndexByPieceId(lastMove.piece_id);
+        console.log(lastMove.piece_id,pieceIndex);
+        piece = pieces[pieceIndex];
+        if(piece.col != lastMove.position.col || piece.row != lastMove.position.row){
+            console.log('la direccion de la pieza '+piece.id+' ha cambiado');
+            dropPiece(pieceIndex, piece, colRowToIndex(lastMove.position.col,lastMove.position.row), false);
+        }
+        if(piece.direction != lastMove.position.direction){
 
-    }
+        }
+    });
+
 }
 
 function dropPiece(index, piece, newBoardPosition, save)

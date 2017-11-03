@@ -117,17 +117,19 @@ class GameController extends Controller
     public function cyclePost(Request $request)
     {
         $queryMove = Move::where('game_id', '=',$request->gameId)->orderBy('created_at','desc')->limit(1);
+        $lastMoves = array();
         if($queryMove->count()>0){
-            $lastMove = $queryMove->get()->toArray()[0];
-            $position = json_decode($lastMove['position']);
-            $lastMove['position'] = $position;
-        }else{
-            $lastMove = null;
+            $listMoves = $queryMove->get()->toArray();
+            foreach($listMoves as $lastMove){
+                $position = json_decode($lastMove['position']);
+                $lastMove['position'] = $position;
+                array_push($lastMoves, $lastMove);
+            }
         }
 
         $response = [
             "complete" => "true",
-            "lastMove" => $lastMove
+            "lastMoves" => $lastMoves
         ];
         return json_encode($response);
 

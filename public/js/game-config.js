@@ -45,3 +45,12 @@ var laserDirectionChanges = {
     }
 };
 var laserOthers = [];
+var sizes = {
+    laser: {
+        radius: 16,
+        gunRadius: 8
+    },
+    mirror: {
+        radius: 15
+    }
+}

@@ -36,10 +36,8 @@ body{
 
 }
 canvas {
-    width: 500px;
-    height: 500px;
-    min-width: 500px;
-    min-height: 500px;
+    width: 75vw;
+    height: 75vw;
 }
 
 .link-copied{
@@ -76,4 +74,15 @@ canvas {
 }
 .not-allowed{
     cursor: not-allowed;
+}
+
+@media all and (max-width: 640px)
+{
+    canvas{
+        width: 100vw;
+        height: 100vw;
+    }
+    .score-board{
+        margin-top: 0;
+    }
 }

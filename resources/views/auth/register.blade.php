@@ -67,7 +67,8 @@
 
                             </div>
                             <div class="col-md-6">
-                                <div class="g-recaptcha" data-sitekey="{{ env('RE_CAP_SITE') }}"></div>
+                                Captcha is here commented out!
+                                {{--<div class="g-recaptcha" data-sitekey="{{ env('RE_CAP_SITE') }}"></div>--}}
                             </div>
                         </div>
 
@@ -85,5 +86,5 @@
     </div>
 </div>
 
-<script src="https://www.google.com/recaptcha/api.js"></script>
+{{--<script src="https://www.google.com/recaptcha/api.js"></script>--}}
 @endsection
