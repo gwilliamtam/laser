@@ -7,6 +7,7 @@ use Auth;
 use App\Models\SetupPiece;
 use App\Models\GameSetup;
 use App\Models\Move;
+use App\Models\Piece;
 use Log;
 use DB;
 
@@ -55,6 +56,29 @@ class Game extends Model
             return true;
         };
         return false;
+    }
+
+    public function restart()
+    {
+        $gameSetup = new GameSetup($this->name, $this->id);
+        $this->setup = json_encode($gameSetup->config);
+
+        Piece::where('game_id','=', $this->id)->delete();
+        Move::where('game_id','=', $this->id)->delete();
+        foreach($gameSetup->pieces as $setupPiece) {
+            $piece = new Piece();
+            $piece->game_id = $this->id;
+            $piece->player = $setupPiece->player;
+            $piece->type = $setupPiece->type;
+            $piece->created_at = date('Y-m-d H:i:s');
+            $position = [
+                "col" => $setupPiece->col,
+                "row" => $setupPiece->row,
+                "direction" => $setupPiece->direction
+            ];
+            $piece->position = json_encode($position);
+            $piece->save();
+        }
     }
 
     public function readyToPlay()

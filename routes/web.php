@@ -22,6 +22,7 @@ Route::get('/home', 'HomeController@index');
 Route::group(['prefix' => 'games'], function(){
     Route::get('create', 'GameController@createGame')->name('createGame');
     Route::post('create', 'GameController@createGamePost')->name('createGamePost');
+    Route::get('restart/{name}/{id}', 'GameController@restartGame')->name('restartGame');
     Route::get('validate/{gameName}', 'GameController@validateGame')->name('validateGame');
     Route::post('move', 'GameController@movePiecePost');
     Route::post('cycle', 'GameController@cyclePost');

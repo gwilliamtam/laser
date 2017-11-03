@@ -26,8 +26,6 @@
         </div>
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');
-            var cycleExpire = config.cycle;
-            var playerInTurn = null;
             console.log("config", config)
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
@@ -107,7 +105,7 @@
                         }
 
                         pieces[index].image.onMouseDown = function (event) {
-                            if(playerInTurn == '{{$player}}') {
+                            if({{ env('APP_ENV') == 'local' }} || playerInTurn == '{{$player}}') {
 
                                 var newBoardPosition = null;
                                 pieces[index].image.onMouseDrag = function (event) {

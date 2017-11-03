@@ -49,6 +49,21 @@ class GameController extends Controller
         return "false";
     }
 
+    public function restartGame(Request $request)
+    {
+        $gameQuery = Game::where('name','=', $request->name)
+            ->where('id', '=', $request->id);
+        if($gameQuery->count()>0){
+            $game = $gameQuery->first();
+            if(Auth::user()->id == $game->player_a_id){
+                $game->restart();
+            }
+            return redirect()->route('playGame', $game->name);
+        }
+        return redirect()->route('home');
+
+    }
+
     public function playGame(Request $request)
     {
         $query = Game::where('name','=', $request->gameName);
@@ -68,6 +83,7 @@ class GameController extends Controller
                     $player = 'b';
                 }
                 return view('games.play', [
+                    '$currentGame' => $game,
                     'config' => $game->setup,
                     'pieces' => json_encode($loadPieces),
                     'player' => $player,
@@ -125,12 +141,18 @@ class GameController extends Controller
                 $lastMove['position'] = $position;
                 array_push($lastMoves, $lastMove);
             }
+            $response = [
+                "complete" => "true",
+                "lastMoves" => $lastMoves
+            ];
+
+        }else{
+            $response = [
+                "complete" => "false",
+                "lastMoves" => null
+            ];
         }
 
-        $response = [
-            "complete" => "true",
-            "lastMoves" => $lastMoves
-        ];
         return json_encode($response);
 
     }

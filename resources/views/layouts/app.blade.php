@@ -59,7 +59,9 @@
                                 </a>
                                 <ul class="dropdown-menu" role="menu">
 
-                                    <li><a href="">Restart Game</a></li>
+                                    @if(!empty($currentGame))
+                                        <li><a href="{{ route('restartGame', [$currentGame->name, $currentGame->id]) }}">Restart Game</a></li>
+                                    @endif
                                     <li><a href="{{ route('createGame') }}">Create Game</a></li>
                                     <li><a href="{{ route('home') }}">List Running Games</a></li>
                                 </ul>
