@@ -372,8 +372,22 @@ function cycleTasks()
         // console.log(returnData);
         if(returnData.complete == 'true'){
             changePosition(returnData.lastMove);
+            playerInTurn = nextInTurn(returnData.lastMove.player);
+            console.log("player in turn", playerInTurn)
         }
     });
+}
+
+function nextInTurn(lastPlayer){
+    if(lastPlayer == 'a'){
+        var nextPlayer = 'b';
+    }else{
+        var nextPlayer = 'a';
+    }
+    $('.player-board.player-'+lastPlayer).removeClass('next-in-turn');
+    $('.player-board.player-'+nextPlayer).addClass('next-in-turn');
+
+    return nextPlayer;
 }
 
 function changePosition(lastMove)

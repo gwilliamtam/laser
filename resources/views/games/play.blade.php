@@ -6,6 +6,7 @@
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');
             var cycleExpire = config.cycle;
+            var playerInTurn = null;
             console.log("config", config)
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
@@ -98,6 +99,7 @@
                                 if (newBoardPosition != null) {
 //                                console.log('about to drop');
                                     dropPiece(index, piece, newBoardPosition, true);
+                                    playerInTurn = null;
                                 }
 
 //                        console.log('piece dropped '+newBoardPosition);
@@ -132,7 +134,16 @@
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
                     }
-                }
+
+
+                    $('#myCanvas').mouseover(function () {
+                        if (playerInTurn == '{{$player}}') {
+                            $('#myCanvas').removeClass('not-allowed');
+                        } else {
+                            $('#myCanvas').addClass('not-allowed');
+                        }
+                    });
+                };
 
             }
 
@@ -140,11 +151,15 @@
         </script>
 
         <div class="score-board">
-            <div class="player-board player-a">
+            <div class="player-board player-a text-center">
+                <div>
                 Player A Moves <span class="moves">{{$movesA}}</span>
+                </div>
             </div>
-            <div class="player-board player-b">
+            <div class="player-board player-b text-center   ">
+                <div>
                 Player B Moves <span class="moves">{{$movesB}}</span>
+                </div>
             </div>
         </div>
         <div class="canvas-container text-center">
