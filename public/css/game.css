@@ -81,6 +81,8 @@ canvas {
     canvas{
         width: 100vw;
         height: 100vw;
+        max-width: ;
+        max-height: 100vw;
     }
     .score-board{
         margin-top: 0;

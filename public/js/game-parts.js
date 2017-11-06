@@ -193,7 +193,7 @@ function rotateMirror(pieceIndex, piece, rotationDir, save)
 
     piece.image.rotate(angle);
     if(save){
-        saveMove(pieceIndex);
+        saveMove('r', pieceIndex);
     }
 }
 
@@ -227,7 +227,7 @@ function rotateLaser(pieceIndex, laser, rotationDir, save)
 console.log("rotationDir", rotationDir, "newDirIndex", newDirIndex, "direction", pieces[pieceIndex].direction, "piece", pieces[pieceIndex]);
     laser.image.rotate(angle);
     if(save){
-        saveMove(pieceIndex);
+        saveMove('r', pieceIndex);
     }
 }
 
@@ -336,11 +336,11 @@ function movePiece(index, piece, delta)
     }
 }
 
-function saveMove(index)
+function saveMove(type, index)
 {
     var piece = pieces[index];
 
-    console.log('saving here', piece);
+    console.log('saving here', type, piece);
 
     $.ajaxSetup({
         headers: {
@@ -349,7 +349,8 @@ function saveMove(index)
     });
 
     var sendData = {
-        piece: JSON.stringify(piece)
+        "piece": JSON.stringify(piece),
+        "type": type
     };
     console.log('sendData',sendData);
     $.post('/games/move', sendData, function(returnData){
@@ -372,46 +373,70 @@ function cycleTasks()
         gameId: config.id,
         gameName: config.name
     };
-    console.log('sendData',sendData);
     $.post('/games/cycle', sendData, function(returnDataJson){
         var returnData = JSON.parse(returnDataJson);
-        // console.log(returnData);
         if(returnData.complete == 'true'){
-            changePosition(returnData.lastMoves);
-            playerInTurn = nextInTurn(returnData.lastMoves[0].player);
+            changePosition(returnData);
+            if(returnData.lastMove == null){
+                playerInTurn = nextInTurn(null);
+            }else{
+                playerInTurn = nextInTurn(returnData.lastMove.player);
+            }
             console.log("player in turn", playerInTurn)
         }
     });
 }
 
 function nextInTurn(lastPlayer){
-    if(lastPlayer == 'a'){
-        var nextPlayer = 'b';
-    }else{
+    if(lastPlayer == 'b' || lastPlayer == null){
         var nextPlayer = 'a';
+
+    }else{
+        var nextPlayer = 'b';
     }
-    $('.player-board.player-'+lastPlayer).removeClass('next-in-turn');
-    $('.player-board.player-'+nextPlayer).addClass('next-in-turn');
+    activePlayer(nextPlayer);
 
     return nextPlayer;
 }
 
-function changePosition(lastMoves)
-{
-    console.log(lastMoves);
-    lastMoves.forEach(function(lastMove){
-        var pieceIndex = getIndexByPieceId(lastMove.piece_id);
-        console.log(lastMove.piece_id,pieceIndex);
-        piece = pieces[pieceIndex];
-        if(piece.col != lastMove.position.col || piece.row != lastMove.position.row){
-            console.log('la direccion de la pieza '+piece.id+' ha cambiado');
-            dropPiece(pieceIndex, piece, colRowToIndex(lastMove.position.col,lastMove.position.row), false);
-        }
-        if(piece.direction != lastMove.position.direction){
+function activePlayer(player){
+    console.log("changing active player");
+    if(player == "a"){
+        $('.player-board.player-b').removeClass('next-in-turn');
+        $('.player-board.player-a').addClass('next-in-turn');
+    }else{
+        $('.player-board.player-a').removeClass('next-in-turn');
+        $('.player-board.player-b').addClass('next-in-turn');
+    }
+}
 
+function changePosition(data)
+{
+    console.log("changing position");
+    var retPieces = data.pieces;
+    retPieces.forEach(function(retPiece){
+        console.log("retPiece.id",retPiece.id, "data.lastMove.piece_id", data.lastMove.piece_id, retPiece.player, playerInTurn);
+        if(retPiece.player != playerInTurn && retPiece.id != data.lastMove.pieceId){
+            var pieceIndex = getIndexByPieceId(retPiece.id);
+            pieces[pieceIndex].col = retPiece.position.col;
+            pieces[pieceIndex].row = retPiece.position.row;
+            var center = board[colRowToIndex(retPiece.position.col, retPiece.position.row)].center();
+            pieces[pieceIndex].image.position = new Point(center);
+            pieces[pieceIndex].direction = retPiece.position.direction;
+            pieces[pieceIndex].image.rotate = directions[retPiece.position.direction];
         }
     });
+    if(data.lastMove!=null){
+        var pieceIndex = getIndexByPieceId(data.lastMove.piece_id);
+        pieces[pieceIndex].col = data.lastMove.position.col;
+        pieces[pieceIndex].row = data.lastMove.position.row;
+        var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
+        pieces[pieceIndex].image.position = new Point(center);
+        pieces[pieceIndex].direction = data.lastMove.position.direction;
+        pieces[pieceIndex].image.rotate = directions[data.lastMove.position.direction];
 
+    }
+    console.log("done changing position");
 }
 
 function dropPiece(index, piece, newBoardPosition, save)
@@ -419,6 +444,7 @@ function dropPiece(index, piece, newBoardPosition, save)
     var piecePosition = colRowToIndex(piece.col, piece.row);
     board[piecePosition].occupiedBy = null;
     if(piecePosition != newBoardPosition){
+        playerInTurn = null;
         moves[piece.player]++;
         $('.score-board .player-'+piece.player+' .moves').text(moves[piece.player]);
     }
@@ -428,7 +454,7 @@ function dropPiece(index, piece, newBoardPosition, save)
     var center = board[newBoardPosition].center();
     pieces[index].image.position = new Point(center.x, center.y);
     if(save){
-        saveMove(index);
+        saveMove('m', index);
     }
 
 }

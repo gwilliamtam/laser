@@ -27,6 +27,7 @@ Route::group(['prefix' => 'games'], function(){
     Route::post('move', 'GameController@movePiecePost');
     Route::post('cycle', 'GameController@cyclePost');
 
+
     // test
     if(env('APP_ENV') == 'local'){
         Route::get('test/create/{gameName}/{user}', 'GameController@createGamePost');
@@ -34,6 +35,8 @@ Route::group(['prefix' => 'games'], function(){
 });
 
 Route::get('/play/{gameName}', 'GameController@playGame')->name('playGame');
+
+Route::get('/board/{name}/{id}', 'CommController@getBoard')->name('getBoard');
 
 Route::get('/','HomeController@index')->name('home');
 

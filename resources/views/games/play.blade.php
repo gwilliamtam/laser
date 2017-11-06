@@ -4,6 +4,19 @@
     <div class="container">
         <script type="text/javascript" src="/js/paper-full.js"></script>
 
+        @if(false and !(empty($currentGame)))
+        <script>
+            if(window.EventSource !== undefined){
+                console.log('Game listener supported');
+                var source = new EventSource("{!! route('getBoard', [$currentGame->name, $currentGame->id]) !!}");
+                source.onmessage = function(event) {
+                    console.log(event.data);
+                };
+            }else{
+                console.log('Game listener not supported');
+            }
+        </script>
+        @endif
 
         <div class="row">
             <div class="score-board">
@@ -105,7 +118,7 @@
                         }
 
                         pieces[index].image.onMouseDown = function (event) {
-                            if({{ env('APP_ENV') == 'local' }} || playerInTurn == '{{$player}}') {
+                            if(playerInTurn == '{{$player}}') {
 
                                 var newBoardPosition = null;
                                 pieces[index].image.onMouseDrag = function (event) {
@@ -118,7 +131,7 @@
                                     if (newBoardPosition != null) {
                                         //console.log('about to drop');
                                         dropPiece(index, piece, newBoardPosition, true);
-                                        playerInTurn = null;
+
                                     }
 
                                     //console.log('piece dropped '+newBoardPosition);

@@ -149,4 +149,36 @@ class Game extends Model
         return false;
     }
 
+    public function getGameImage($name, $id)
+    {
+        $queryPieces = Piece::select('pieces.id', 'pieces.player', 'pieces.type', 'pieces.position')
+            ->join("games", "games.id", "=", "pieces.game_id")
+            ->where("games.name", "=", $name)
+            ->where("pieces.game_id", "=", $id);
+        $pieces = array();
+        if($queryPieces->count()>0){
+            $listPieces = $queryPieces->get();
+            foreach($listPieces as $piece){
+                $piece->position = json_decode($piece->position, true);
+                array_push($pieces, $piece);
+            }
+        }
+
+        $lastMove = null;
+        $queryMove = Move::where('game_id', '=',$id)->where('type','=', 'm')->orderBy('created_at','desc')->limit(1);
+        if($queryMove->count()>0) {
+            $lastMove = $queryMove->get()->toArray();
+            $position = json_decode($lastMove[0]['position']);
+            $lastMove[0]['position'] = $position;
+        }
+
+        $response = [
+            "complete" => "true",
+            "pieces" => $pieces,
+            "lastMove" => $lastMove[0]
+        ];
+
+        return json_encode($response);
+    }
+
 }

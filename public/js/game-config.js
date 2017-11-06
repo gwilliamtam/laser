@@ -54,5 +54,6 @@ var sizes = {
         radius: 15
     }
 }
-var cycleExpire = config.cycle;
+var cycleExpire = 5;
+// var cycleExpire = config.cycle;
 var playerInTurn = null;

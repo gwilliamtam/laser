@@ -10,7 +10,6 @@ use App\Models\Piece;
 use App\Models\Move;
 use Auth;
 
-
 class GameController extends Controller
 {
     public function __construct()
@@ -83,7 +82,7 @@ class GameController extends Controller
                     $player = 'b';
                 }
                 return view('games.play', [
-                    '$currentGame' => $game,
+                    'currentGame' => $game,
                     'config' => $game->setup,
                     'pieces' => json_encode($loadPieces),
                     'player' => $player,
@@ -103,7 +102,7 @@ class GameController extends Controller
 
     public function movePiecePost(Request $request)
     {
-        if(!empty($request->piece)){
+        if(!empty($request->piece and !empty($request->type))){
             $movePiece = json_decode($request->piece);
             $positon = [
               "col" => $movePiece->col,
@@ -117,6 +116,7 @@ class GameController extends Controller
             $piece->save();
 
             $move = new Move;
+            $move->type = $request->type;
             $move->game_id = $piece->game_id;
             $move->player = $movePiece->player;
             $move->piece_id = $piece->id;
@@ -132,29 +132,9 @@ class GameController extends Controller
 
     public function cyclePost(Request $request)
     {
-        $queryMove = Move::where('game_id', '=',$request->gameId)->orderBy('created_at','desc')->limit(1);
-        $lastMoves = array();
-        if($queryMove->count()>0){
-            $listMoves = $queryMove->get()->toArray();
-            foreach($listMoves as $lastMove){
-                $position = json_decode($lastMove['position']);
-                $lastMove['position'] = $position;
-                array_push($lastMoves, $lastMove);
-            }
-            $response = [
-                "complete" => "true",
-                "lastMoves" => $lastMoves
-            ];
-
-        }else{
-            $response = [
-                "complete" => "false",
-                "lastMoves" => null
-            ];
-        }
-
-        return json_encode($response);
-
+        $game = new Game();
+        $response =  $game->getGameImage($request->gameName, $request->gameId);
+        return $response;
     }
 
 }

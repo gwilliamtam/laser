@@ -85,6 +85,5 @@
         </div>
     </div>
 </div>
-
-{{--<script src="https://www.google.com/recaptcha/api.js"></script>--}}
+{{--<script src='https://www.google.com/recaptcha/api.js'></script>--}}
 @endsection

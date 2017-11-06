@@ -14,11 +14,8 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/game.css') }}" rel="stylesheet">
 
-    <script
-            src="https://code.jquery.com/jquery-3.2.1.js"
-            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
-            crossorigin="anonymous"></script>
-    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script src="{{ asset('js/jquery-3.2.1.js') }}"></script>
+
 </head>
 <body>
     <div id="app">
