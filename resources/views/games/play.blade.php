@@ -64,10 +64,16 @@
                 piecesArr.forEach(function(pieceTmp){
                     pieces.add(pieceTmp.id, pieceTmp.type, pieceTmp.col, pieceTmp.row, pieceTmp.player, pieceTmp.direction);
                 });
-
+console.log("pieces", pieces);
                 pieces.forEach(function(piece,index){
                     paintPiece(index,piece);
                 });
+
+//                view.onClick = function(event){
+//                    console.log("clicked on ", this)
+//                }
+
+
                 pieces.forEach(function(piece,index)
                 {
                     if(piece.player == "{{ $player }}") {

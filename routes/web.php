@@ -28,11 +28,15 @@ Route::group(['prefix' => 'games'], function(){
     Route::post('cycle', 'GameController@cyclePost');
 
 
-    // test
-    if(env('APP_ENV') == 'local'){
-        Route::get('test/create/{gameName}/{user}', 'GameController@createGamePost');
-    }
+
 });
+
+// test
+if(env('APP_ENV') == 'local'){
+    Route::get('test', function(){
+        return view("games.play-test");
+    });
+}
 
 Route::get('/play/{gameName}', 'GameController@playGame')->name('playGame');
 

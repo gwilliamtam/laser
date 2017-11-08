@@ -143,24 +143,30 @@ function paintPiece(index, piece)
     if(piece.type == 'mirror'){
         var boardIndex = colRowToIndex(piece.col, piece.row);
         var center = board[boardIndex].center();
-        var pieceColor;
-        if(piece.player == 'a'){
-            pieceColor = config.player.a.color;
-        }else{
-            pieceColor = config.player.b.color;
-        }
-
-        var long = sizes.mirror.radius;
-        var mirror = new Path.Arc(
-            new Point(center.x-long, center.y),
-            new Point(center.x, center.y+long),
-            new Point(center.x+long, center.y)
-        )
-        mirror.fillColor = pieceColor;
-        mirror.rotate(directions[piece.direction]);
-        mirror.position = new Point(center.x, center.y);
-        pieces.setImage(index, mirror);
+        var mirrorImage = createMirror(center.x, center.y, piece.player, piece.direction);
+        pieces.setImage(index, mirrorImage);
     }
+}
+
+function createMirror(x,y, player, direction)
+{
+    var pieceColor;
+    if(player == 'a'){
+        pieceColor = config.player.a.color;
+    }else{
+        pieceColor = config.player.b.color;
+    }
+    var long = sizes.mirror.radius;
+    var mirror = new Path.Arc(
+        new Point(x-long, y),
+        new Point(x, y+long),
+        new Point(x+long, y)
+    )
+    mirror.fillColor = pieceColor;
+    mirror.rotate(directions[direction]);
+    mirror.position = new Point(x, y);
+
+    return mirror;
 }
 
 function rotateMirror(pieceIndex, piece, rotationDir, save)
@@ -190,8 +196,7 @@ function rotateMirror(pieceIndex, piece, rotationDir, save)
         newDirIndex = 0;
     }
     pieces[pieceIndex].direction = directionsArray[newDirIndex];
-
-    piece.image.rotate(angle);
+    piece.image.rotate(angle)
     if(save){
         saveMove('r', pieceIndex);
     }
@@ -382,7 +387,6 @@ function cycleTasks()
             }else{
                 playerInTurn = nextInTurn(returnData.lastMove.player);
             }
-            console.log("player in turn", playerInTurn)
         }
     });
 }
@@ -400,7 +404,6 @@ function nextInTurn(lastPlayer){
 }
 
 function activePlayer(player){
-    console.log("changing active player");
     if(player == "a"){
         $('.player-board.player-b').removeClass('next-in-turn');
         $('.player-board.player-a').addClass('next-in-turn');
@@ -412,31 +415,33 @@ function activePlayer(player){
 
 function changePosition(data)
 {
-    console.log("changing position");
     var retPieces = data.pieces;
+    console.log("redrawing player != " + playerInTurn);
     retPieces.forEach(function(retPiece){
-        console.log("retPiece.id",retPiece.id, "data.lastMove.piece_id", data.lastMove.piece_id, retPiece.player, playerInTurn);
-        if(retPiece.player != playerInTurn && retPiece.id != data.lastMove.pieceId){
+        // console.log("retPiece.id",retPiece.id, "data.lastMove.piece_id", data.lastMove.piece_id, retPiece.player, playerInTurn);
+        if(retPiece.player != playerInTurn ){
             var pieceIndex = getIndexByPieceId(retPiece.id);
             pieces[pieceIndex].col = retPiece.position.col;
             pieces[pieceIndex].row = retPiece.position.row;
-            var center = board[colRowToIndex(retPiece.position.col, retPiece.position.row)].center();
-            pieces[pieceIndex].image.position = new Point(center);
             pieces[pieceIndex].direction = retPiece.position.direction;
-            pieces[pieceIndex].image.rotate = directions[retPiece.position.direction];
+
+            var center = board[colRowToIndex(retPiece.position.col, retPiece.position.row)].center();
+            // debugger
+            // var prevOnClick = pieces[pieceIndex].image.onClick;
+            // pieces[pieceIndex].image = createMirror(center.x,center.y, retPiece.player, retPiece.position.direction)
+            // pieces[pieceIndex].image = prevOnClick;
         }
     });
-    if(data.lastMove!=null){
-        var pieceIndex = getIndexByPieceId(data.lastMove.piece_id);
-        pieces[pieceIndex].col = data.lastMove.position.col;
-        pieces[pieceIndex].row = data.lastMove.position.row;
-        var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
-        pieces[pieceIndex].image.position = new Point(center);
-        pieces[pieceIndex].direction = data.lastMove.position.direction;
-        pieces[pieceIndex].image.rotate = directions[data.lastMove.position.direction];
-
-    }
-    console.log("done changing position");
+    // if(data.lastMove!=null){
+    //     var pieceIndex = getIndexByPieceId(data.lastMove.piece_id);
+    //     pieces[pieceIndex].col = data.lastMove.position.col;
+    //     pieces[pieceIndex].row = data.lastMove.position.row;
+    //     var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
+    //     pieces[pieceIndex].image.position = new Point(center);
+    //     pieces[pieceIndex].direction = data.lastMove.position.direction;
+    //     // pieces[pieceIndex].image.setRotation(directions[data.lastMove.position.direction]);
+    //
+    // }
 }
 
 function dropPiece(index, piece, newBoardPosition, save)
@@ -444,7 +449,9 @@ function dropPiece(index, piece, newBoardPosition, save)
     var piecePosition = colRowToIndex(piece.col, piece.row);
     board[piecePosition].occupiedBy = null;
     if(piecePosition != newBoardPosition){
-        playerInTurn = null;
+        if(save){
+            playerInTurn = null;
+        }
         moves[piece.player]++;
         $('.score-board .player-'+piece.player+' .moves').text(moves[piece.player]);
     }

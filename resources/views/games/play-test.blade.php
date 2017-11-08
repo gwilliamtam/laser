@@ -2,12 +2,23 @@
 
 @section('content')
     <div class="container">
-        <div id="config">xxx</div>
-        <script>
-            var config = "willy";
-            var config = JSON.parse('{!! htmlspecialchars_decode( $config ) !!}');
-            console.log("config", config)
-            $('#config').html(config);
-        </script>
+
+        <div>
+            <input name="text" id="text" type="text">
+            <button id="button" type="btn">Send</button>
+            <button id="close" type="btn">Close</button>
+        </div>
+
     </div>
+    <script>
+
+        $(document).ready(function(){
+
+
+
+
+        })
+
+
+    </script>
 @endsection
