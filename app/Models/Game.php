@@ -165,7 +165,11 @@ class Game extends Model
         }
 
         $lastMove = null;
-        $queryMove = Move::where('game_id', '=',$id)->where('type','=', 'm')->orderBy('created_at','desc')->limit(1);
+        $queryMove = Move::where('game_id', '=',$id)
+            ->where(function($query){
+                $query->where('type','=', 'm')
+                    ->orWhere('type','=', 'f');
+            })->orderBy('created_at','desc')->limit(1);
         if($queryMove->count()>0) {
             $lastMove = $queryMove->get()->toArray();
             $position = json_decode($lastMove[0]['position']);

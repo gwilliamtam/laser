@@ -3,47 +3,61 @@
 @section('content')
     <div class="container">
         <script type="text/javascript" src="/js/paper-full.js"></script>
-
-        @if(false and !(empty($currentGame)))
-        <script>
-            if(window.EventSource !== undefined){
-                console.log('Game listener supported');
-                var source = new EventSource("{!! route('getBoard', [$currentGame->name, $currentGame->id]) !!}");
-                source.onmessage = function(event) {
-                    console.log(event.data);
-                };
-            }else{
-                console.log('Game listener not supported');
-            }
-        </script>
-        @endif
-
         <div class="row">
             <div class="score-board">
                 <div class="player-board player-a text-center">
                     <div>
-                    Player A Moves <span class="moves">{{$movesA}}</span>
+                    {{$players['playerAname']}} <span class="moves">{{$movesA}}</span>
                     </div>
                 </div>
                 <div class="player-board player-b text-center   ">
                     <div>
-                    Player B Moves <span class="moves">{{$movesB}}</span>
+                        {{$players['playerBname']}} <span class="moves">{{$movesB}}</span>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="row">
             <div class="canvas-container text-center">
                 <canvas id="myCanvas"></canvas>
             </div>
         </div>
+
+        <div class="modal fade" id="game-modal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Modal title</h5>
+                        {{--<button type="button" class="close" data-dismiss="modal" aria-label="Close">--}}
+                            {{--<span aria-hidden="true">&times;</span>--}}
+                        {{--</button>--}}
+                    </div>
+                    <div class="modal-body">
+                        <p>Modal body text goes here.</p>
+                    </div>
+                    <div class="modal-footer">
+                        @if($player == "a")
+                            <a type="button" class="btn btn-primary" href="{!! route('restartGame', [$currentGame->name, $currentGame->id]) !!}">Restart Game</a>
+                        @endif
+                        {{--<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>--}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');
             console.log("config", config)
+            var thisPlayer = "{{$player}}";
+            var playerAname = "{{$players['playerAname']}}";
+            var playerBname = "{{$players['playerBname']}}";
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
         <script type="text/javascript" src="/js/game-parts.js"></script>
         <script type="text/javascript" canvas="myCanvas">
+
+            var controls = null;
 
             // Make the paper scope global, by injecting it into window:
             paper.install(window);
@@ -52,7 +66,7 @@
                 // Setup directly from canvas id:
                 board = SetBoard();
 
-                var controls = {
+                controls = {
                     mirror: MakemirrorControls(),
                     laser: MakeLaserControls()
                 };
@@ -61,102 +75,100 @@
                 console.log("piecesArr", piecesArr)
 
                 pieces = new MakePieces();
+                var cnt = 0;
                 piecesArr.forEach(function(pieceTmp){
                     pieces.add(pieceTmp.id, pieceTmp.type, pieceTmp.col, pieceTmp.row, pieceTmp.player, pieceTmp.direction);
+                    piecesIndex[pieceTmp.id] = cnt;
+                    cnt++;
                 });
-console.log("pieces", pieces);
+
                 pieces.forEach(function(piece,index){
                     paintPiece(index,piece);
                 });
 
-//                view.onClick = function(event){
-//                    console.log("clicked on ", this)
-//                }
-
-
-                pieces.forEach(function(piece,index)
-                {
-                    if(piece.player == "{{ $player }}") {
-                        laserPaths = null;
-                        pieces[index].image.onClick = function (event) {
-//                        console.log('click on piece');
-
-                            if (draggingPiece) {
-                                draggingPiece = false;
-                            } else {
-                                if (piece.type == 'mirror') {
-                                    offLaser(laserPaths);
-                                    showControl(piece, controls);
-                                    controls.mirror.children[0].onClick = function (event) {
-                                        hideControls(controls);
+                view.onClick = function(event){
+                    if(gameOver == null){
+                        if(playerInTurn == thisPlayer){
+                            point = event.point;
+                            var clickedPosition = findBoardPosition(point);
+                            var pieceId = board[clickedPosition.index].occupiedBy;
+                            var piece = null;
+                            if(pieceId != null){
+                                var index = piecesIndex[pieceId];
+                                piece = pieces[index];
+                            }
+                            if(piece!=null){
+                                if(piece.player == thisPlayer){
+                                    if (piece.type == 'mirror') {
+                                        offLaser(laserPaths);
+                                        showControl(piece, controls);
+                                        controls.mirror.children[0].onClick = function (event) {
+                                            hideControls(controls);
+                                        }
+                                        controls.mirror.children[1].onClick = function (event) {
+                                            rotateMirror(index, piece, 'l', true);
+                                        }
+                                        controls.mirror.children[2].onClick = function (event) {
+                                            rotateMirror(index, piece, 'r', true);
+                                        }
                                     }
-                                    controls.mirror.children[1].onClick = function (event) {
-                                        rotateMirror(index, piece, 'l', true);
-                                    }
-                                    controls.mirror.children[2].onClick = function (event) {
-                                        rotateMirror(index, piece, 'r', true);
-                                    }
-                                }
-                                if (piece.type == 'laser') {
-                                    offLaser(laserPaths);
-                                    showControl(piece, controls);
-                                    controls.laser.children[0].onClick = function (event) {
-                                        hideControls(controls);
-                                    }
-                                    controls.laser.children[1].onClick = function (event) {
-                                        rotateLaser(index, piece, 'l', true);
-                                    }
-                                    controls.laser.children[2].onClick = function (event) {
-                                        rotateLaser(index, piece, 'r',true);
-                                    }
-                                    controls.laser.children[3].onClick = function (event) {
-                                        if (draggingPiece) {
-                                            draggingPiece = false;
-                                        } else {
-                                            if (piece.type == 'laser') {
-                                                hideControls(controls);
-                                                laserOn = piece.player;
+                                    if (piece.type == 'laser') {
+                                        offLaser(laserPaths);
+                                        showControl(piece, controls);
+                                        controls.laser.children[0].onClick = function (event) {
+                                            hideControls(controls);
+                                        }
+                                        controls.laser.children[1].onClick = function (event) {
+                                            rotateLaser(index, piece, 'l', true);
+                                        }
+                                        controls.laser.children[2].onClick = function (event) {
+                                            rotateLaser(index, piece, 'r',true);
+                                        }
+                                        controls.laser.children[3].onClick = function (event) {
+                                            if (draggingPiece) {
+                                                draggingPiece = false;
+                                            } else {
+                                                if (piece.type == 'laser') {
+                                                    hideControls(controls);
+                                                    laserOn = piece.player;
+                                                }
                                             }
                                         }
                                     }
+                                }else{
+                                    blinkPlayers(thisPlayer);
                                 }
-                            }
-                        }
 
-                        pieces[index].image.onMouseDown = function (event) {
-                            if(playerInTurn == '{{$player}}') {
-
-                                var newBoardPosition = null;
-                                pieces[index].image.onMouseDrag = function (event) {
-                                    draggingPiece = true;
-                                    //console.log('dragging piece');
-                                    newBoardPosition = movePiece(index, piece, event.delta);
-                                }
-                                pieces[index].image.onMouseUp = function (event) {
-                                    offLaser(laserPaths);
-                                    if (newBoardPosition != null) {
-                                        //console.log('about to drop');
-                                        dropPiece(index, piece, newBoardPosition, true);
-
-                                    }
-
-                                    //console.log('piece dropped '+newBoardPosition);
-                                }
                             }else{
-                                alert('Not your turn {{$player}}')
+                                hideControls(controls);
+
+                                if(playerInTurn == thisPlayer){
+                                    if(selectedPieceId!=null){
+                                        if(validMovement(selectedPieceId, clickedPosition.col, clickedPosition.row )){
+                                            movePiece(selectedPieceId, clickedPosition.col, clickedPosition.row);
+                                            saveMove("m", piecesIndex[selectedPieceId]);
+                                            playerInTurn = null;
+                                            activePlayer(null);
+                                            selectedPieceId = null;
+                                        };
+                                    }
+                                }
                             }
+                        }else{
+                            blinkPlayers(null);
                         }
+                        console.log("You just clicked in ", clickedPosition, " occupied by ", piece);
                     }
-                });
+                }
 
                 view.onFrame = onFrame;
 
                 function onFrame(event) {
                     var second = parseInt(event.time);
                     var decasecond = parseInt(event.time*10);
-//                console.log(second, decasecond, event.time);
 
                     if(laserOn !== null && laserStop === null){
+                        hideControls(controls)
                         laserPaths = fire(laserOn);
                         laserStop = second + 5;
                     }
@@ -171,6 +183,11 @@ console.log("pieces", pieces);
                         drawLaser();
                     }
 
+                    if(laserMove === true){
+                        laserMove = null;
+                        laserStop = second + 5;
+                    }
+
                     if(second>=cycleExpire){
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
@@ -178,7 +195,6 @@ console.log("pieces", pieces);
                 };
 
             }
-
 
         </script>
 @endsection

@@ -81,11 +81,26 @@ class GameController extends Controller
                 if($game->player_b_id == Auth::user()->id){
                     $player = 'b';
                 }
+
+                $playerA = $playerB = null;
+                $queryPlayerA = User::where('id','=', $game->player_a_id);
+                if($queryPlayerA->count()>0){
+                    $playerA = $queryPlayerA->first();
+                }
+                $queryPlayerB = User::where('id','=', $game->player_b_id);
+                if($queryPlayerB->count()>0){
+                    $playerB = $queryPlayerB->first();
+                }
+
                 return view('games.play', [
                     'currentGame' => $game,
                     'config' => $game->setup,
                     'pieces' => json_encode($loadPieces),
                     'player' => $player,
+                    'players' => [
+                        'playerAname' => $playerA->name,
+                        'playerBname' => $playerB->name,
+                    ],
                     'movesA' => $movesA,
                     'movesB' => $movesB,
                 ]);

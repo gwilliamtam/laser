@@ -4,8 +4,22 @@ function SetBoard()
     paper.setup('myCanvas');
 
     var board = new MakeBoard();
-
+    for(var i=1; i<=config.colsMax; i++){
+        boardArray[i] = new Array();
+    }
+    // boardArray[0][0] values are invalid
     board.forEach(function(section, index){
+        boardArray[section.col][section.row] = {
+            index: index,
+            col: section.col,
+            row: section.row,
+            xi: section.xi,
+            yi: section.yi,
+            xf: section.xf,
+            yf: section.yf
+        };
+    });
+    board.forEach(function(section){
         var rect = new Rectangle(new Point(section.xi,section.yi), new Point(section.xf,section.yf));
         var boardSection = new Path.Rectangle(rect);
         boardSection.fillColor = section.color;
@@ -240,18 +254,24 @@ function paintLaser(index, piece)
 {
     var boardIndex = colRowToIndex(piece.col, piece.row);
     var center = board[boardIndex].center();
+    var laserImage = createLaser(center.x, center.y, piece.player, piece.direction);
+    pieces.setImage(index, laserImage);
+}
+
+function createLaser(x,y, player, direction)
+{
     var pieceColor;
-    if(piece.player == 'a'){
+    if(player == 'a'){
         pieceColor = config.player.a.color;
     }else{
         pieceColor = config.player.b.color;
     }
-    var centerGun = applyDirection(center.x,center.y,piece.direction, parseInt(sizes.laser.radius*.7));
+    var centerGun = applyDirection(x,y,direction, parseInt(sizes.laser.radius*.7));
 
     var path = new CompoundPath({
         children: [
             new Path.Circle({
-                center: new Point(center.x, center.y),
+                center: new Point(x, y),
                 radius: sizes.laser.radius
             }),
             new Path.Circle({
@@ -261,8 +281,9 @@ function paintLaser(index, piece)
         ],
         fillColor: pieceColor
     });
-    path.position = new Point(center);
-    pieces.setImage(index, path);
+    path.position = new Point({x:x,y:y});
+
+    return path;
 }
 
 function applyDirection(x,y,direction, gap)
@@ -309,7 +330,20 @@ function getIndexByPieceId(id)
     return indexFound;
 }
 
-function movePiece(index, piece, delta)
+function movePiece(id,col,row)
+{
+    var piece = pieces[piecesIndex[id]];
+    var origBordIndex = colRowToIndex(piece.col,piece.row)
+    var destBordIndex = colRowToIndex(col,row)
+    board[origBordIndex].occupiedBy = null;
+    board[destBordIndex].occupiedBy = id;
+    pieces[piecesIndex[id]].col = col;
+    pieces[piecesIndex[id]].row = row;
+    var center = board[destBordIndex].center();
+    pieces[piecesIndex[id]].image.position = new Point(center.x, center.y);
+}
+
+function movePieceOld(index, piece, delta)
 {
     var newX=piece.image.position.x+delta.x;
     var newY=piece.image.position.y+delta.y;
@@ -318,15 +352,16 @@ function movePiece(index, piece, delta)
         var newX=piece.image.position.x;
         var newY=piece.image.position.y;
     }
-    var newBoardPosition = findBoardPosition(newX, newY);
+    var newBoardPosition = findBoardPosition({x:newX, y:newY});
+    var pieceBoardPosition = findBoardPosition({x:piece.image.position.x, y:piece.image.position.y})
     var allowMovement = false;
-    if(newBoardPosition == findBoardPosition(piece.image.position.x, piece.image.position.y)){
+    if(newBoardPosition.index == pieceBoardPosition.index){
         allowMovement = true;
     }else{
-        if(board[newBoardPosition].occupiedBy == null || board[newBoardPosition].occupiedBy == piece.id){
+        if(board[newBoardPosition.index].occupiedBy == null || board[newBoardPosition.index].occupiedBy == piece.id){
             var available = availableMoveDirections(piece);
             available.forEach(function(avDir){
-                if(newBoardPosition == colRowToIndex(avDir.col, avDir.row)){
+                if(newBoardPosition.index == colRowToIndex(avDir.col, avDir.row)){
                     allowMovement = true;
                 }
             });
@@ -335,7 +370,7 @@ function movePiece(index, piece, delta)
     }
     if(allowMovement) {
         pieces[index].image.position = new Point(newX, newY);
-        return newBoardPosition;
+        return newBoardPosition.index;
     }else{
         return colRowToIndex(piece.col, piece.row);
     }
@@ -368,27 +403,31 @@ function saveMove(type, index)
 
 function cycleTasks()
 {
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    var sendData = {
-        gameId: config.id,
-        gameName: config.name
-    };
-    $.post('/games/cycle', sendData, function(returnDataJson){
-        var returnData = JSON.parse(returnDataJson);
-        if(returnData.complete == 'true'){
-            changePosition(returnData);
-            if(returnData.lastMove == null){
-                playerInTurn = nextInTurn(null);
-            }else{
-                playerInTurn = nextInTurn(returnData.lastMove.player);
+    if(gameOver == null){
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
-        }
-    });
+        });
+
+        var sendData = {
+            gameId: config.id,
+            gameName: config.name
+        };
+        $.post('/games/cycle', sendData, function(returnDataJson){
+            var returnData = JSON.parse(returnDataJson);
+            if(returnData.complete == 'true'){
+                if(playerInTurn != thisPlayer){
+                    changePosition(returnData);
+                }
+                if(returnData.lastMove == null){
+                    playerInTurn = nextInTurn(null);
+                }else{
+                    playerInTurn = nextInTurn(returnData.lastMove.player);
+                }
+            }
+        });
+    }
 }
 
 function nextInTurn(lastPlayer){
@@ -407,41 +446,65 @@ function activePlayer(player){
     if(player == "a"){
         $('.player-board.player-b').removeClass('next-in-turn');
         $('.player-board.player-a').addClass('next-in-turn');
-    }else{
+    }
+    if(player == "b"){
         $('.player-board.player-a').removeClass('next-in-turn');
         $('.player-board.player-b').addClass('next-in-turn');
+    }
+    if(player == null){
+        $('.player-board.player-a').removeClass('next-in-turn');
+        $('.player-board.player-b').removeClass('next-in-turn');
     }
 }
 
 function changePosition(data)
 {
     var retPieces = data.pieces;
-    console.log("redrawing player != " + playerInTurn);
+    console.log("redrawing player != " + playerInTurn, data);
     retPieces.forEach(function(retPiece){
-        // console.log("retPiece.id",retPiece.id, "data.lastMove.piece_id", data.lastMove.piece_id, retPiece.player, playerInTurn);
-        if(retPiece.player != playerInTurn ){
-            var pieceIndex = getIndexByPieceId(retPiece.id);
+        if(retPiece.player != thisPlayer ){
+            var pieceIndex = piecesIndex[retPiece.id];
             pieces[pieceIndex].col = retPiece.position.col;
             pieces[pieceIndex].row = retPiece.position.row;
             pieces[pieceIndex].direction = retPiece.position.direction;
 
             var center = board[colRowToIndex(retPiece.position.col, retPiece.position.row)].center();
-            // debugger
-            // var prevOnClick = pieces[pieceIndex].image.onClick;
-            // pieces[pieceIndex].image = createMirror(center.x,center.y, retPiece.player, retPiece.position.direction)
-            // pieces[pieceIndex].image = prevOnClick;
+            if(pieces[pieceIndex].type == "mirror"){
+                pieces[pieceIndex].image.remove();
+                pieces[pieceIndex].image = createMirror(center.x,center.y, retPiece.player, retPiece.position.direction);
+            }
+            if(pieces[pieceIndex.type == "laser"]){
+                pieces[pieceIndex].image.remove();
+                pieces[pieceIndex].image = createLaser(center.x,center.y, retPiece.player, retPiece.position.direction);
+            }
         }
     });
-    // if(data.lastMove!=null){
-    //     var pieceIndex = getIndexByPieceId(data.lastMove.piece_id);
-    //     pieces[pieceIndex].col = data.lastMove.position.col;
-    //     pieces[pieceIndex].row = data.lastMove.position.row;
-    //     var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
-    //     pieces[pieceIndex].image.position = new Point(center);
-    //     pieces[pieceIndex].direction = data.lastMove.position.direction;
-    //     // pieces[pieceIndex].image.setRotation(directions[data.lastMove.position.direction]);
-    //
-    // }
+    if(data.lastMove!=null){
+        // debugger
+        var pieceIndex = piecesIndex[data.lastMove.piece_id];
+        if(playerInTurn != null && pieces[pieceIndex].player != thisPlayer){
+            if(data.lastMove.type == "m"){
+                pieces[pieceIndex].col = data.lastMove.position.col;
+                pieces[pieceIndex].row = data.lastMove.position.row;
+                pieces[pieceIndex].direction = data.lastMove.position.direction;
+                var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
+                if(pieces[pieceIndex].type == "mirror"){
+                    pieces[pieceIndex].image.remove();
+                    pieces[pieceIndex].image = createMirror(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
+                }
+                if(pieces[pieceIndex].type == "laser"){
+                    pieces[pieceIndex].image.remove();
+                    pieces[pieceIndex].image = createLaser(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
+                }
+            }
+            if(data.lastMove.type == "f"){
+                hideControls(controls)
+                laserPaths = fire(data.lastMove.player);
+                laserMove = true;
+            }
+        }
+
+    }
 }
 
 function dropPiece(index, piece, newBoardPosition, save)
@@ -475,17 +538,31 @@ function grabPiece(piece)
     return copy;
 }
 
-function findBoardPosition(x,y)
+function findBoardPosition(point)
 {
-    var x = parseInt(x);
-    var y = parseInt(y);
-    var response = null;
-    board.forEach(function(section,index){
-
-        if(x>=section.xi && x<=section.xf && y>=section.yi && y<=section.yf){
-            response = index;
+    var x = parseInt(point.x);
+    var y = parseInt(point.y);
+    // board.forEach(function(section,index){
+    //
+    //     if(point.x>=section.xi && point.x<=section.xf && point.y>=section.yi && point.y<=section.yf){
+    //         response = index;
+    //     }
+    // });
+    for(var i=1; i<=config.colsMax; i++){
+        if(point.x >= boardArray[i][1].xi && point.x <= boardArray[i][1].xf){
+            var colFound = i;
         }
-    });
+    }
+    for(var j=1; j<=config.rowsMax; j++){
+        if(point.y >= boardArray[1][j].yi && point.y <= boardArray[1][j].yf){
+            var rowFound = j;
+        }
+    }
+    var response = {
+        col: colFound,
+        row: rowFound,
+        index: colRowToIndex(colFound, rowFound)
+    }
     return response;
 }
 
@@ -566,6 +643,8 @@ function fire(player)
         var calculateTrack = true;
         var cnt = 0;
         var prev = {col: laser.col, row: laser.row};
+
+        saveMove("f", piecesIndex[laser.id]);
         console.log('laser starts in ',prev);
         while(calculateTrack && cnt<1000)
         {
@@ -580,27 +659,36 @@ function fire(player)
                     laserSegment++;
                     calculateTrack = true;
                 }else{
-                    if(pieces[boardSection.occupiedBy].type == 'laser'){
-                        laserOthers.push(pieces[boardSection.occupiedBy]);
-                        if(pieces[boardSection.occupiedBy].player == player){
-                            console.log('Player '+pieces[boardSection.occupiedBy].player+' auto destroyed!');
+                    if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'laser'){
+                        laserOthers.push(pieces[piecesIndex[boardSection.occupiedBy]]);
+                        calculateTrack = false;
+                        gameOver = {
+                            winner: notPlayer(pieces[piecesIndex[boardSection.occupiedBy]].player),
+                            reason: null
+                        }
+                        if(gameOver.winner == laser.player){
+                            gameOver.reason = playerName(gameOver.winner) + " destroyed "+playerName(notPlayer(gameOver.winner))
                         }else{
-                            console.log('Player '+pieces[boardSection.occupiedBy].player+' destroyed!');
+                            gameOver.reason = playerName(notPlayer(gameOver.winner)) + " Auto Destroyed! Seems like " + playerName(notPlayer(gameOver.winner)) + " found it was too much!";
                         }
 
-                    }
-                    if(pieces[boardSection.occupiedBy].type == 'mirror'){
-                        laserDirection = changeLaserDirection(laserDirection, pieces[boardSection.occupiedBy].direction);
-                        laserOthers.push(pieces[boardSection.occupiedBy]);
-                    }
-                    if(laserDirection != null){
-                        laserPaths.push(calcLaserPath(prev, next));
-                        laserSegment++;
-                        calculateTrack = true;
+
+
+                        endGame();
                     }else{
-                        laserPaths.push(calcLaserPath(prev, next));
-                        laserSegment++;
-                        calculateTrack = false;
+                        if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'mirror'){
+                            laserDirection = changeLaserDirection(laserDirection, pieces[piecesIndex[boardSection.occupiedBy]].direction);
+                            laserOthers.push(pieces[piecesIndex[boardSection.occupiedBy]]);
+                        }
+                        if(laserDirection != null){
+                            laserPaths.push(calcLaserPath(prev, next));
+                            laserSegment++;
+                            calculateTrack = true;
+                        }else{
+                            laserPaths.push(calcLaserPath(prev, next));
+                            laserSegment++;
+                            calculateTrack = false;
+                        }
                     }
                 }
 
@@ -612,6 +700,7 @@ function fire(player)
         }
     }
     console.log(laserPaths, laserOthers);
+
     return laserPaths;
 
 }
@@ -644,7 +733,6 @@ function offLaser(listPaths)
 {
     if(listPaths!=null){
         listPaths.forEach(function(path){
-// console.log(path);
             path.remove();
         })
     }
@@ -731,6 +819,7 @@ function MakeLaserControls()
 
 function showControl(piece, controls)
 {
+    selectedPieceId = piece.id;
     hideControls(controls);
     var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
     if(piece.type == 'mirror'){
@@ -750,4 +839,59 @@ function hideControls(controls)
 {
     controls.mirror.visible = false;
     controls.laser.visible = false;
+}
+
+function validMovement(id, col, row )
+{
+    var piece = pieces[piecesIndex[id]];
+    var deltaCol = piece.col - col;
+    var deltaRow = piece.row - row;
+    if(board[colRowToIndex(col,row)].occupiedBy == null){
+        if(Math.abs(deltaCol) == 1 && deltaRow == 0){
+            return true;
+        }
+        if(Math.abs(deltaRow) == 1 && deltaCol == 0){
+            return true;
+        }
+    }
+    return false;
+}
+
+function blinkPlayers(player)
+{
+    if(player == null){
+        $('.player-board').fadeOut(150).fadeIn(150).fadeOut(150).fadeIn(150);
+    }else{
+        $('.player-'+player).fadeOut(150).fadeIn(150).fadeOut(150).fadeIn(150);
+    }
+
+}
+
+function playerName(player)
+{
+    if(player == 'a'){
+        return playerAname;
+    }
+    if(player == 'b'){
+        return playerBname;
+    }
+    return null;
+}
+
+function notPlayer(player)
+{
+    if(player == "a"){
+        return "b";
+    }
+    if(player == "b"){
+        return "a";
+    }
+    return null;
+}
+
+function endGame()
+{
+    $(".modal-title").html('GAME OVER');
+    $(".modal-body").html(playerName(gameOver.winner)+' wins!'+"<br>"+gameOver.reason)
+    $("#game-modal").modal("show");
 }
