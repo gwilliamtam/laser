@@ -69,7 +69,7 @@ class GameController extends Controller
         if($query->count()>0) {
             $game = $query->first();
 
-            // user not belong to this game
+            // may be the user not belong to this game
             if ($game->userBelongsToGame()) {
                 $loadPieces = $game->loadPieces();
                 list($movesA, $movesB) = $game->getTotalMoves();
@@ -92,21 +92,23 @@ class GameController extends Controller
                     $playerB = $queryPlayerB->first();
                 }
 
-                return view('games.play', [
-                    'currentGame' => $game,
-                    'config' => $game->setup,
-                    'pieces' => json_encode($loadPieces),
-                    'player' => $player,
-                    'players' => [
-                        'playerAname' => $playerA->name,
-                        'playerBname' => $playerB->name,
-                    ],
-                    'movesA' => $movesA,
-                    'movesB' => $movesB,
-                ]);
-            } else {
-                return redirect()->route('home');
+                if(!empty($playerA) and !empty($playerB)){
+                    return view('games.play', [
+                        'currentGame' => $game,
+                        'config' => $game->setup,
+                        'pieces' => json_encode($loadPieces),
+                        'player' => $player,
+                        'players' => [
+                            'playerAname' => $playerA->name,
+                            'playerBname' => $playerB->name,
+                        ],
+                        'movesA' => $movesA,
+                        'movesB' => $movesB,
+                    ]);
+                }
             }
+            return redirect()->route('home');
+
         }
 
         return view('games.game-not-exist', [
@@ -119,12 +121,13 @@ class GameController extends Controller
     {
         if(!empty($request->piece and !empty($request->type))){
             $movePiece = json_decode($request->piece);
-            $positon = [
-              "col" => $movePiece->col,
-              "row" => $movePiece->row,
-              "direction" => $movePiece->direction,
+            $position = [
+                "col" => $movePiece->col,
+                "row" => $movePiece->row,
+                "direction" => $movePiece->direction,
             ];
-            $json_position = json_encode($positon);
+
+            $json_position = json_encode($position);
 
             $piece = Piece::where('id', '=', $movePiece->id)->first();
             $piece->position = $json_position;
@@ -136,7 +139,7 @@ class GameController extends Controller
             $move->player = $movePiece->player;
             $move->piece_id = $piece->id;
             $move->created_at = date("Y-m-d H:i:s");
-            $move->position = $json_position;
+            $move->position = empty($request->reason) ? $json_position : $request->reason;
             $move->save();
 
             return 'true';

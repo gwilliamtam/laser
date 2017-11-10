@@ -24,6 +24,9 @@
             </div>
         </div>
 
+        <div class="board">
+        </div>
+
         <div class="modal fade" id="game-modal">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -37,8 +40,11 @@
                         <p>Modal body text goes here.</p>
                     </div>
                     <div class="modal-footer">
+                        <a type="button" class="btn btn-primary" href="{!! route('home') !!}">Back Home</a>
                         @if($player == "a")
                             <a type="button" class="btn btn-primary" href="{!! route('restartGame', [$currentGame->name, $currentGame->id]) !!}">Restart Game</a>
+                        @else
+                            <a type="button" class="btn btn-primary" href="{!! route('playGame', $currentGame->name) !!}">Back To Game</a>
                         @endif
                         {{--<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>--}}
                     </div>
@@ -169,6 +175,7 @@
 
                     if(laserOn !== null && laserStop === null){
                         hideControls(controls)
+                        console.log(laserOn);
                         laserPaths = fire(laserOn);
                         laserStop = second + 5;
                     }
@@ -191,6 +198,7 @@
                     if(second>=cycleExpire){
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
+                        $('.board').html(showBoardPieces());
                     }
                 };
 

@@ -8,6 +8,7 @@ use App\Models\SetupPiece;
 use App\Models\GameSetup;
 use App\Models\Move;
 use App\Models\Piece;
+use App\Models\User;
 use Log;
 use DB;
 
@@ -79,6 +80,8 @@ class Game extends Model
             $piece->position = json_encode($position);
             $piece->save();
         }
+
+        $this->save();
     }
 
     public function readyToPlay()
@@ -133,6 +136,11 @@ class Game extends Model
         }
     }
 
+    /**
+     * This method will add the player to the game if player B is empty
+     *
+     * @return bool
+     */
     public function userBelongsToGame()
     {
         $userId = Auth::user()->id;
@@ -168,12 +176,14 @@ class Game extends Model
         $queryMove = Move::where('game_id', '=',$id)
             ->where(function($query){
                 $query->where('type','=', 'm')
-                    ->orWhere('type','=', 'f');
+                    ->orWhere('type','=', 'f')
+                    ->orWhere('type','=', 'o');
             })->orderBy('created_at','desc')->limit(1);
         if($queryMove->count()>0) {
             $lastMove = $queryMove->get()->toArray();
-            $position = json_decode($lastMove[0]['position']);
-            $lastMove[0]['position'] = $position;
+            if($lastMove[0]['type'] != "o"){
+                $lastMove[0]['position'] = json_decode($lastMove[0]['position']);
+            }
         }
 
         $response = [
@@ -183,6 +193,55 @@ class Game extends Model
         ];
 
         return json_encode($response);
+    }
+
+    public static function getUsersInGames($games)
+    {
+        $usersArr = array();
+        foreach($games as $game){
+            array_push($usersArr, $game->player_a_id);
+            array_push($usersArr, $game->player_b_id);
+        }
+        asort($usersArr);
+        $listUserIds = array();
+        $prevUserId = null;
+        foreach($usersArr as $userId){
+            if($userId != null){
+                if($prevUserId == null || $prevUserId != $userId){
+                    array_push($listUserIds, $userId);
+                    $prevUserId = $userId;
+                }
+            }
+        }
+        $queryUsers = User::whereIn('id', $listUserIds);
+        $userData = array();
+        if($queryUsers->count()>0){
+            $users = $queryUsers->get();
+            foreach($users as $user){
+                $userData[$user->id] = [
+                    "name" => $user->name,
+                    "email" => $user->email
+                ];
+            }
+        }
+        return $userData;
+    }
+
+    public static function getGamesStatus($games)
+    {
+        $status = array();
+
+        foreach($games as $game) {
+            $status[$game->id] = null;
+            if(!empty($game->player_a_id) && !empty($game->player_b_id)){
+                $status[$game->id] = "ready";
+            }
+            if(empty($game->player_a_id) || empty($game->player_b_id)){
+                $status[$game->id] = "wait";
+            }
+        }
+
+        return $status;
     }
 
 }

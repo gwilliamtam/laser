@@ -57,7 +57,8 @@ var sizes = { // initial sizes value to build pieces
         radius: 15
     }
 }
-var cycleExpire = 3; // seconds every cycle will be repeated
+var cycleExpire = 1; // seconds every cycle will be repeated
 var playerInTurn = null; // current player in turn
 var selectedPieceId = null;
 var gameOver = null;
+var admin = true;

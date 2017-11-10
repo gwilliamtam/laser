@@ -82,6 +82,10 @@ canvas {
     cursor: not-allowed;
 }
 
+.board{
+    font-family: "Courier New";
+}
+
 @media all and (max-width: 640px)
 {
     canvas{
@@ -92,5 +96,14 @@ canvas {
     }
     .score-board{
         margin-top: 0;
+    }
+}
+
+@media all and (orientation: landscape){
+    canvas{
+        width: 100vh;
+        height: 100vh;
+        max-width: 85vh;
+        max-height: 85vh;
     }
 }

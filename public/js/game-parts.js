@@ -33,13 +33,13 @@ function SetBoard()
         strokeColor: 'black'
     });
 
-    board.first = function(){
-        return board[0];
-    }
-
-    board.last = function(){
-        return board[63];
-    }
+    // board.first = function(){
+    //     return board[0];
+    // }
+    //
+    // board.last = function(){
+    //     return board[63];
+    // }
 
     return board;
 
@@ -333,10 +333,10 @@ function getIndexByPieceId(id)
 function movePiece(id,col,row)
 {
     var piece = pieces[piecesIndex[id]];
-    var origBordIndex = colRowToIndex(piece.col,piece.row)
-    var destBordIndex = colRowToIndex(col,row)
-    board[origBordIndex].occupiedBy = null;
-    board[destBordIndex].occupiedBy = id;
+    var origBoardIndex = colRowToIndex(piece.col,piece.row)
+    var destBoardIndex = colRowToIndex(col,row)
+    board[origBoardIndex].occupiedBy = null;
+    board[destBoardIndex].occupiedBy = id;
     pieces[piecesIndex[id]].col = col;
     pieces[piecesIndex[id]].row = row;
     var center = board[destBordIndex].center();
@@ -401,6 +401,39 @@ function saveMove(type, index)
 
 }
 
+function saveEndOfGame(gameOver)
+{
+
+    var laserWinnerIndex = null;
+    pieces.forEach(function(aPiece,index){
+        if(aPiece.type == "laser" && aPiece.player == gameOver.winner){
+            laserWinnerIndex = index;
+        }
+    })
+
+    var piece = pieces[laserWinnerIndex];
+    var type = "o";
+    console.log('saving end of game', type, piece);
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    var sendData = {
+        "piece": JSON.stringify(piece),
+        "type": type,
+        "reason": gameOver.reason
+    };
+    console.log('sendData',sendData);
+    $.post('/games/move', sendData, function(returnData){
+        if(returnData != 'true'){
+            console.log('piece movement not saved');
+        }
+    });
+}
+
 function cycleTasks()
 {
     if(gameOver == null){
@@ -416,15 +449,28 @@ function cycleTasks()
         };
         $.post('/games/cycle', sendData, function(returnDataJson){
             var returnData = JSON.parse(returnDataJson);
+            console.log(returnData);
             if(returnData.complete == 'true'){
-                if(playerInTurn != thisPlayer){
-                    changePosition(returnData);
-                }
-                if(returnData.lastMove == null){
-                    playerInTurn = nextInTurn(null);
-                }else{
-                    playerInTurn = nextInTurn(returnData.lastMove.player);
-                }
+
+                    if(playerInTurn != thisPlayer){
+                        changePosition(returnData);
+                    }
+                    if(returnData.lastMove == null){
+                        playerInTurn = nextInTurn(null);
+                    }else{
+                        if(returnData.lastMove.type == "o"){
+                            playerInTurn = nextInTurn(null);
+                            gameOver = {
+                                winner: returnData.lastMove.player,
+                                reason: returnData.lastMove.position
+                            }
+                            endGame();
+                        }else{
+                            playerInTurn = nextInTurn(returnData.lastMove.player);
+                        }
+                    }
+
+
             }
         });
     }
@@ -467,8 +513,8 @@ function changePosition(data)
             pieces[pieceIndex].col = retPiece.position.col;
             pieces[pieceIndex].row = retPiece.position.row;
             pieces[pieceIndex].direction = retPiece.position.direction;
-
-            var center = board[colRowToIndex(retPiece.position.col, retPiece.position.row)].center();
+            var boardIndex = colRowToIndex(retPiece.position.col, retPiece.position.row);
+            var center = board[boardIndex].center();
             if(pieces[pieceIndex].type == "mirror"){
                 pieces[pieceIndex].image.remove();
                 pieces[pieceIndex].image = createMirror(center.x,center.y, retPiece.player, retPiece.position.direction);
@@ -477,17 +523,18 @@ function changePosition(data)
                 pieces[pieceIndex].image.remove();
                 pieces[pieceIndex].image = createLaser(center.x,center.y, retPiece.player, retPiece.position.direction);
             }
+            board[boardIndex].occupiedBy = retPiece.id;
         }
     });
     if(data.lastMove!=null){
-        // debugger
         var pieceIndex = piecesIndex[data.lastMove.piece_id];
         if(playerInTurn != null && pieces[pieceIndex].player != thisPlayer){
             if(data.lastMove.type == "m"){
                 pieces[pieceIndex].col = data.lastMove.position.col;
                 pieces[pieceIndex].row = data.lastMove.position.row;
                 pieces[pieceIndex].direction = data.lastMove.position.direction;
-                var center = board[colRowToIndex(data.lastMove.position.col, data.lastMove.position.row)].center();
+                var boardIndex = colRowToIndex(data.lastMove.position.col, data.lastMove.position.row);
+                var center = board[boardIndex].center();
                 if(pieces[pieceIndex].type == "mirror"){
                     pieces[pieceIndex].image.remove();
                     pieces[pieceIndex].image = createMirror(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
@@ -496,6 +543,7 @@ function changePosition(data)
                     pieces[pieceIndex].image.remove();
                     pieces[pieceIndex].image = createLaser(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
                 }
+                board[boardIndex].occupiedBy = retPiece.piece_id;
             }
             if(data.lastMove.type == "f"){
                 hideControls(controls)
@@ -660,6 +708,7 @@ function fire(player)
                     calculateTrack = true;
                 }else{
                     if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'laser'){
+                        // end game actions
                         laserOthers.push(pieces[piecesIndex[boardSection.occupiedBy]]);
                         calculateTrack = false;
                         gameOver = {
@@ -672,8 +721,7 @@ function fire(player)
                             gameOver.reason = playerName(notPlayer(gameOver.winner)) + " Auto Destroyed! Seems like " + playerName(notPlayer(gameOver.winner)) + " found it was too much!";
                         }
 
-
-
+                        saveEndOfGame(gameOver);
                         endGame();
                     }else{
                         if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'mirror'){
@@ -892,6 +940,33 @@ function notPlayer(player)
 function endGame()
 {
     $(".modal-title").html('GAME OVER');
-    $(".modal-body").html(playerName(gameOver.winner)+' wins!'+"<br>"+gameOver.reason)
+    $(".modal-body").html("<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason)
     $("#game-modal").modal("show");
+}
+
+function showBoardPieces()
+{
+    var boardRow = "";
+    var boardText = "";
+
+    for(var j=1; j<=config.rowsMax; j++){
+        for(var i=1; i<=config.colsMax; i++) {
+            var boardIndex = boardArray[i][j].index;
+            var pieceId = board[boardIndex].occupiedBy;
+            if(pieceId == null){
+                var piece = null;
+            }else{
+                var piece = pieces[piecesIndex[pieceId]];
+            }
+            if(pieceId == null){
+                var segment = "[_]";
+            }else{
+                var segment = "["+piece.type.substr(0,1)+"]";
+            }
+            boardRow = boardRow + segment;
+        }
+        boardText = boardText + boardRow + " " + j + "<br>";
+        boardRow = "";
+    }
+    return boardText;
 }

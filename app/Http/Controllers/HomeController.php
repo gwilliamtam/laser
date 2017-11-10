@@ -30,14 +30,22 @@ class HomeController extends Controller
             ->orWhere('player_b_id','=', Auth::user()->id)
             ->orderby('name');
 
+        $usersInGames = array();
+        $gameStatus = array();
         if($queryGames->count()>0){
+
             $games = $queryGames->get();
+            $usersInGames = Game::getUsersInGames($games);
+            $gameStatus = Game::getGamesStatus($games);
+
         }else{
             $games = null;
         }
 
         return view('home', [
-            "games" => $games
+            "games" => $games,
+            "usersInGames" => $usersInGames,
+            "gameStatus" => $gameStatus
         ]);
     }
 }
