@@ -28,7 +28,7 @@ class Game extends Model
         }
     }
 
-    public function create($gameName, $userId = null){
+    public function create($gameName, $userId = null, $size=10, $shape){
         $this->name = $gameName;
         $this->player_a_id = $userId;
         $this->player_b_id = null;
@@ -36,8 +36,10 @@ class Game extends Model
         $this->save();
 
         $gameSetup = new GameSetup($gameName, $this->id);
+        $gameSetup->setSize($size);
+        $gameSetup->setShape($shape);
+        $gameSetup->create();
         $this->setup = json_encode($gameSetup->config);
-
         if($this->save()){
             foreach($gameSetup->pieces as $setupPiece){
                 $piece = new Piece();
@@ -61,9 +63,12 @@ class Game extends Model
 
     public function restart()
     {
+        $setup = json_decode($this->setup);
         $gameSetup = new GameSetup($this->name, $this->id);
+        $gameSetup->setSize($setup->size);
+        $gameSetup->setShape($setup->shape);
+        $gameSetup->create();
         $this->setup = json_encode($gameSetup->config);
-
         Piece::where('game_id','=', $this->id)->delete();
         Move::where('game_id','=', $this->id)->delete();
         foreach($gameSetup->pieces as $setupPiece) {
@@ -227,9 +232,39 @@ class Game extends Model
         return $userData;
     }
 
+    public static function getLastShot($name, $id)
+    {
+        $shotQuery = Move::where('game_id','=', $id)
+            ->where('type', '=', 'f')
+            ->orderBy('created_at', 'desc')
+            ->limit(1);
+        if($shotQuery->count()>0){
+            $shot = $shotQuery->get()->toArray();
+            if($shot[0]['type'] != "o"){
+                $shot[0]['position'] = json_decode($shot[0]['position']);
+            }
+        }
+        $response = [
+            "complete" => "true",
+            "lastShot" => $shot[0]
+        ];
+        return json_encode($response);
+    }
+
     public static function getGamesStatus($games)
     {
         $status = array();
+
+        $gamesIds = array_column($games->toArray(),'id');
+        $queryEndedGames = Move::select('game_id')
+            ->whereIn('game_id',$gamesIds)
+            ->where('type', '=', 'o');
+        if($queryEndedGames->count()>0){
+            $endedGames = $queryEndedGames->get()->toArray();
+        }else{
+            $endedGames = array();
+        }
+        $listEndedGames = array_column($endedGames, "game_id");
 
         foreach($games as $game) {
             $status[$game->id] = null;
@@ -238,6 +273,9 @@ class Game extends Model
             }
             if(empty($game->player_a_id) || empty($game->player_b_id)){
                 $status[$game->id] = "wait";
+            }
+            if(in_array($game->id, $listEndedGames)){
+                $status[$game->id] = "over";
             }
         }
 

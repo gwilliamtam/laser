@@ -60,7 +60,7 @@
                                         <li><a href="{{ route('restartGame', [$currentGame->name, $currentGame->id]) }}">Restart Game</a></li>
                                     @endif
                                     <li><a href="{{ route('createGame') }}">Create Game</a></li>
-                                    <li><a href="{{ route('home') }}">List Running Games</a></li>
+                                    <li><a href="{{ route('home') }}">List Existent Games</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">

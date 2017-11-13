@@ -24,6 +24,8 @@
             </div>
         </div>
 
+        <div id="movements"></div>
+
         <div class="board">
         </div>
 
@@ -31,10 +33,10 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Modal title</h5>
-                        {{--<button type="button" class="close" data-dismiss="modal" aria-label="Close">--}}
-                            {{--<span aria-hidden="true">&times;</span>--}}
-                        {{--</button>--}}
+                        <h5 class="modal-title pull-left">Modal title</h5>
+                        <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <p>Modal body text goes here.</p>
@@ -54,7 +56,6 @@
 
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');
-            console.log("config", config)
             var thisPlayer = "{{$player}}";
             var playerAname = "{{$players['playerAname']}}";
             var playerBname = "{{$players['playerBname']}}";
@@ -78,7 +79,6 @@
                 };
 
                 var piecesArr = JSON.parse('{!! $pieces !!}');
-                console.log("piecesArr", piecesArr)
 
                 pieces = new MakePieces();
                 var cnt = 0;
@@ -163,7 +163,6 @@
                         }else{
                             blinkPlayers(null);
                         }
-                        console.log("You just clicked in ", clickedPosition, " occupied by ", piece);
                     }
                 }
 
@@ -175,12 +174,11 @@
 
                     if(laserOn !== null && laserStop === null){
                         hideControls(controls)
-                        console.log(laserOn);
-                        laserPaths = fire(laserOn);
+                        laserPaths = fire(laserOn, true);
                         laserStop = second + 5;
                     }
 
-                    if(second == laserStop){
+                    if(gameOver == null && second == laserStop){
                         offLaser(laserPaths);
                         laserStop = null;
                         laserOn = null;
@@ -194,11 +192,10 @@
                         laserMove = null;
                         laserStop = second + 5;
                     }
-
+                    $('.board').html(showBoardPieces());
                     if(second>=cycleExpire){
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
-                        $('.board').html(showBoardPieces());
                     }
                 };
 

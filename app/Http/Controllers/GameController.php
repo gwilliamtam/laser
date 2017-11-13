@@ -41,11 +41,47 @@ class GameController extends Controller
     public function createGamePost(Request $request)
     {
         $game = New Game;
-        if($game->create($request->gameName, $request->userId)){
+        if($game->create($request->gameName, $request->userId, $request->size, $request->shape)){
             return "true";
         }
 
         return "false";
+    }
+
+    public function deletePost(Request $request)
+    {
+        if(!empty($request->gameName) and !empty($request->gameId) and !empty($request->playerId)){
+            $queryGame = Game::Where('id','=',$request->gameId)
+                ->where('name','=', $request->gameName)
+                ->where('player_a_id','=', $request->playerId);
+            if($queryGame->count()>0){
+                $queryGame->delete();
+
+                $queryPieces = Piece::where('game_id','=', $request->gameId);
+                if($queryPieces->count()>0){
+                    $queryPieces->delete();
+                }
+
+                $queryMoves = Move::where('game_id', '=', $request->gameId);
+                if($queryMoves->count()>0){
+                    $queryMoves->delete();
+                }
+            }
+        }
+        return redirect()->route('home');
+    }
+
+    public function leavePost(Request $request)
+    {
+        if (!empty($request->gameName) and !empty($request->gameId) and !empty($request->playerId)) {
+            $queryGame = Game::Where('id','=',$request->gameId)
+                ->where('name','=', $request->gameName)
+                ->where('player_b_id','=', $request->playerId);
+            $game = $queryGame->first();
+            $game->player_b_id = null;
+            $game->save();
+        }
+        return redirect()->route('home');
     }
 
     public function restartGame(Request $request)
@@ -152,6 +188,12 @@ class GameController extends Controller
     {
         $game = new Game();
         $response =  $game->getGameImage($request->gameName, $request->gameId);
+        return $response;
+    }
+
+    public function getLastShot(Request $request){
+        $game = new Game();
+        $response =  $game->getLastShot($request->gameName, $request->gameId);
         return $response;
     }
 

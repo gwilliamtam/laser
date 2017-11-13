@@ -26,6 +26,9 @@ Route::group(['prefix' => 'games'], function(){
     Route::get('validate/{gameName}', 'GameController@validateGame')->name('validateGame');
     Route::post('move', 'GameController@movePiecePost');
     Route::post('cycle', 'GameController@cyclePost');
+    Route::post('lastShot', 'GameController@getLastShot');
+    Route::post('delete', 'GameController@deletePost')->name('deleteGame');
+    Route::post('leave', 'GameController@leavePost')->name('leaveGame');
 
 
 
@@ -33,8 +36,10 @@ Route::group(['prefix' => 'games'], function(){
 
 // test
 if(env('APP_ENV') == 'local'){
-    Route::get('test', function(){
-        return view("games.play-test");
+    Route::get('test/create', function(){
+        $gameSetup = new \App\Models\GameSetup("test", 1, 'triangleAroundLaser');
+        $gameSetup->setSize(15);
+        $gameSetup->create();
     });
 }
 

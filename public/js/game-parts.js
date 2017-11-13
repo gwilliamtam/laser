@@ -211,9 +211,15 @@ function rotateMirror(pieceIndex, piece, rotationDir, save)
     }
     pieces[pieceIndex].direction = directionsArray[newDirIndex];
     piece.image.rotate(angle)
+    movementsMessage(piece.player, 'rotated a mirror');
     if(save){
         saveMove('r', pieceIndex);
     }
+}
+
+function movementsMessage(player, text){
+    // console.log(player, text)
+    $('#movements').html(playerName(player)+" "+text);
 }
 
 function rotateLaser(pieceIndex, laser, rotationDir, save)
@@ -243,8 +249,8 @@ function rotateLaser(pieceIndex, laser, rotationDir, save)
         newDirIndex = 0;
     }
     pieces[pieceIndex].direction = directionsArray[newDirIndex];
-console.log("rotationDir", rotationDir, "newDirIndex", newDirIndex, "direction", pieces[pieceIndex].direction, "piece", pieces[pieceIndex]);
     laser.image.rotate(angle);
+    movementsMessage(laser.player, 'rotated the laser');
     if(save){
         saveMove('r', pieceIndex);
     }
@@ -339,63 +345,24 @@ function movePiece(id,col,row)
     board[destBoardIndex].occupiedBy = id;
     pieces[piecesIndex[id]].col = col;
     pieces[piecesIndex[id]].row = row;
-    var center = board[destBordIndex].center();
+    var center = board[destBoardIndex].center();
     pieces[piecesIndex[id]].image.position = new Point(center.x, center.y);
-}
-
-function movePieceOld(index, piece, delta)
-{
-    var newX=piece.image.position.x+delta.x;
-    var newY=piece.image.position.y+delta.y;
-    var edges = board.edges();
-    if(newX<=edges.left || newX>=edges.right || newY<=edges.top || newY>=edges.bottom){
-        var newX=piece.image.position.x;
-        var newY=piece.image.position.y;
-    }
-    var newBoardPosition = findBoardPosition({x:newX, y:newY});
-    var pieceBoardPosition = findBoardPosition({x:piece.image.position.x, y:piece.image.position.y})
-    var allowMovement = false;
-    if(newBoardPosition.index == pieceBoardPosition.index){
-        allowMovement = true;
-    }else{
-        if(board[newBoardPosition.index].occupiedBy == null || board[newBoardPosition.index].occupiedBy == piece.id){
-            var available = availableMoveDirections(piece);
-            available.forEach(function(avDir){
-                if(newBoardPosition.index == colRowToIndex(avDir.col, avDir.row)){
-                    allowMovement = true;
-                }
-            });
-        }
-
-    }
-    if(allowMovement) {
-        pieces[index].image.position = new Point(newX, newY);
-        return newBoardPosition.index;
-    }else{
-        return colRowToIndex(piece.col, piece.row);
-    }
 }
 
 function saveMove(type, index)
 {
     var piece = pieces[index];
-
-    console.log('saving here', type, piece);
-
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-
     var sendData = {
         "piece": JSON.stringify(piece),
         "type": type
     };
-    console.log('sendData',sendData);
     $.post('/games/move', sendData, function(returnData){
         if(returnData != 'true'){
-            console.log('piece movement not saved');
         }
     });
 
@@ -413,7 +380,6 @@ function saveEndOfGame(gameOver)
 
     var piece = pieces[laserWinnerIndex];
     var type = "o";
-    console.log('saving end of game', type, piece);
 
     $.ajaxSetup({
         headers: {
@@ -426,12 +392,11 @@ function saveEndOfGame(gameOver)
         "type": type,
         "reason": gameOver.reason
     };
-    console.log('sendData',sendData);
     $.post('/games/move', sendData, function(returnData){
         if(returnData != 'true'){
-            console.log('piece movement not saved');
         }
     });
+    movementsMessage(null, 'Game Over');
 }
 
 function cycleTasks()
@@ -449,7 +414,6 @@ function cycleTasks()
         };
         $.post('/games/cycle', sendData, function(returnDataJson){
             var returnData = JSON.parse(returnDataJson);
-            console.log(returnData);
             if(returnData.complete == 'true'){
 
                     if(playerInTurn != thisPlayer){
@@ -464,8 +428,20 @@ function cycleTasks()
                                 winner: returnData.lastMove.player,
                                 reason: returnData.lastMove.position
                             }
+                            fireLastShot();
+                            laserOn = true;
                             endGame();
                         }else{
+                            if(returnData.lastMove.type == "m"){
+                                movementsMessage(returnData.lastMove.player, "moved a piece");
+                            }
+                            if(returnData.lastMove.type == "f"){
+                                movementsMessage(returnData.lastMove.player, "fired the laser");
+                            }
+                            if(returnData.lastMove.type == "r"){
+                                movementsMessage(returnData.lastMove.player, "rotate a piece");
+                            }
+                            // console.log(returnData.lastMove)
                             playerInTurn = nextInTurn(returnData.lastMove.player);
                         }
                     }
@@ -488,6 +464,23 @@ function nextInTurn(lastPlayer){
     return nextPlayer;
 }
 
+function fireLastShot()
+{
+    var sendData = {
+        gameId: config.id,
+        gameName: config.name
+    };
+    $.post('/games/lastShot', sendData, function(returnDataJson){
+        var returnData = JSON.parse(returnDataJson);
+        if(returnData.complete == 'true'){
+            if(returnData.lastShot.type == "f"){
+                laserOn = true;
+                laserPaths = fire(returnData.lastShot.player, false)
+            }
+        }
+    });
+}
+
 function activePlayer(player){
     if(player == "a"){
         $('.player-board.player-b').removeClass('next-in-turn');
@@ -506,10 +499,10 @@ function activePlayer(player){
 function changePosition(data)
 {
     var retPieces = data.pieces;
-    console.log("redrawing player != " + playerInTurn, data);
     retPieces.forEach(function(retPiece){
         if(retPiece.player != thisPlayer ){
             var pieceIndex = piecesIndex[retPiece.id];
+            board[colRowToIndex(pieces[pieceIndex].col,pieces[pieceIndex].row)].occupiedBy = null;
             pieces[pieceIndex].col = retPiece.position.col;
             pieces[pieceIndex].row = retPiece.position.row;
             pieces[pieceIndex].direction = retPiece.position.direction;
@@ -527,27 +520,33 @@ function changePosition(data)
         }
     });
     if(data.lastMove!=null){
+
+        // playerInTurn==this vs playerInTurm==other
+        // movement==thisPlayer vs movement!=thisPlayer
+
         var pieceIndex = piecesIndex[data.lastMove.piece_id];
         if(playerInTurn != null && pieces[pieceIndex].player != thisPlayer){
-            if(data.lastMove.type == "m"){
-                pieces[pieceIndex].col = data.lastMove.position.col;
-                pieces[pieceIndex].row = data.lastMove.position.row;
-                pieces[pieceIndex].direction = data.lastMove.position.direction;
-                var boardIndex = colRowToIndex(data.lastMove.position.col, data.lastMove.position.row);
-                var center = board[boardIndex].center();
-                if(pieces[pieceIndex].type == "mirror"){
-                    pieces[pieceIndex].image.remove();
-                    pieces[pieceIndex].image = createMirror(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
-                }
-                if(pieces[pieceIndex].type == "laser"){
-                    pieces[pieceIndex].image.remove();
-                    pieces[pieceIndex].image = createLaser(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
-                }
-                board[boardIndex].occupiedBy = retPiece.piece_id;
-            }
+            // if(data.lastMove.type == "m"){
+            //     console.log("willy");
+            //     board[colRowToIndex(pieces[pieceIndex].col,pieces[pieceIndex].row)].occupiedBy = null;
+            //     pieces[pieceIndex].col = data.lastMove.position.col;
+            //     pieces[pieceIndex].row = data.lastMove.position.row;
+            //     pieces[pieceIndex].direction = data.lastMove.position.direction;
+            //     var boardIndex = colRowToIndex(data.lastMove.position.col, data.lastMove.position.row);
+            //     var center = board[boardIndex].center();
+            //     if(pieces[pieceIndex].type == "mirror"){
+            //         pieces[pieceIndex].image.remove();
+            //         pieces[pieceIndex].image = createMirror(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
+            //     }
+            //     if(pieces[pieceIndex].type == "laser"){
+            //         pieces[pieceIndex].image.remove();
+            //         pieces[pieceIndex].image = createLaser(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
+            //     }
+            //     board[boardIndex].occupiedBy = parseInt(data.lastMove.piece_id);
+            // }
             if(data.lastMove.type == "f"){
                 hideControls(controls)
-                laserPaths = fire(data.lastMove.player);
+                laserPaths = fire(data.lastMove.player, false);
                 laserMove = true;
             }
         }
@@ -571,6 +570,7 @@ function dropPiece(index, piece, newBoardPosition, save)
     pieces[index].row = board[newBoardPosition].row;
     var center = board[newBoardPosition].center();
     pieces[index].image.position = new Point(center.x, center.y);
+    movementsMessage(piece.player, 'moved a piece');
     if(save){
         saveMove('m', index);
     }
@@ -675,7 +675,7 @@ function laserNextColRow(col,row,direction)
     }
 }
 
-function fire(player)
+function fire(player, save)
 {
     var laser = null;
     pieces.forEach(function(piece){
@@ -692,8 +692,10 @@ function fire(player)
         var cnt = 0;
         var prev = {col: laser.col, row: laser.row};
 
-        saveMove("f", piecesIndex[laser.id]);
-        console.log('laser starts in ',prev);
+        if(save){
+            saveMove("f", piecesIndex[laser.id]);
+        }
+
         while(calculateTrack && cnt<1000)
         {
             cnt++;
@@ -721,7 +723,9 @@ function fire(player)
                             gameOver.reason = playerName(notPlayer(gameOver.winner)) + " Auto Destroyed! Seems like " + playerName(notPlayer(gameOver.winner)) + " found it was too much!";
                         }
 
-                        saveEndOfGame(gameOver);
+                        if(save){
+                            saveEndOfGame(gameOver);
+                        }
                         endGame();
                     }else{
                         if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'mirror'){
@@ -742,13 +746,10 @@ function fire(player)
 
             }
             if(next == null){
-                console.log('laser ends in ',prev);
             }
             prev = next;
         }
     }
-    console.log(laserPaths, laserOthers);
-
     return laserPaths;
 
 }
@@ -895,10 +896,14 @@ function validMovement(id, col, row )
     var deltaCol = piece.col - col;
     var deltaRow = piece.row - row;
     if(board[colRowToIndex(col,row)].occupiedBy == null){
-        if(Math.abs(deltaCol) == 1 && deltaRow == 0){
+        // console.log(deltaCol, deltaRow);
+        if(Math.abs(deltaCol) == 1 && Math.abs(deltaRow) == 0){
             return true;
         }
-        if(Math.abs(deltaRow) == 1 && deltaCol == 0){
+        if(Math.abs(deltaCol) == 0 && Math.abs(deltaRow) == 1){
+            return true;
+        }
+        if(Math.abs(deltaCol) == 1 && Math.abs(deltaRow) == 1){
             return true;
         }
     }
@@ -939,6 +944,8 @@ function notPlayer(player)
 
 function endGame()
 {
+    activePlayer(null);
+    $(".player-"+gameOver.winner).html(playerName(gameOver.winner)+" wins!");
     $(".modal-title").html('GAME OVER');
     $(".modal-body").html("<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason)
     $("#game-modal").modal("show");

@@ -23,7 +23,7 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
 
         $queryGames = Game::where('player_a_id','=', Auth::user()->id)
@@ -42,10 +42,16 @@ class HomeController extends Controller
             $games = null;
         }
 
+//        $gameSetup = new \App\Models\GameSetup('test',1);
+//        $gameSetup->setSize(10);
+//        $gameSetup->create();
+
+        $allowDelete = empty($request->d) ? false : true;
         return view('home', [
             "games" => $games,
             "usersInGames" => $usersInGames,
-            "gameStatus" => $gameStatus
+            "gameStatus" => $gameStatus,
+            "allowDelete" => $allowDelete
         ]);
     }
 }

@@ -154,7 +154,7 @@
 //                console.log(second, decasecond, event.time);
 
                 if(laserOn !== null && laserStop === null){
-                    laserPaths = fire(laserOn);
+                    laserPaths = fire(laserOn, true);
                     laserStop = second + 5;
                 }
 

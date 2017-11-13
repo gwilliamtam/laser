@@ -11,6 +11,29 @@
                         {{ csrf_field() }}
 
                         <div id="game-creator" class="form-group{{ $errors->has('gameName') ? ' has-error' : '' }}">
+
+                            <div class="form-group game-grid text-center">
+                                <button type="button" class="btn btn-default" data-size="8">8 x 8</button>
+                                <button type="button" class="btn btn-primary" data-size="10">10 x 10</button>
+                                <button type="button" class="btn btn-default" data-size="12">12 x 12</button>
+                                <button type="button" class="btn btn-default" data-size="15">15 x 15</button>
+                            </div>
+
+                            <div class="form-group game-shape text-center">
+                                <button type="button" class="btn btn-primary" data-shape="twoHorizontalLines">
+                                    <img src="/img/twoHorizontalLines.png" class="game-icon"><br>
+                                    <span>Two Horizontal Lines</span>
+                                </button>
+                                <button type="button" class="btn btn-default" data-shape="triangleAroundLaser">
+                                    <img src="/img/triangleAroundLaser.png" class="game-icon"><br>
+                                    <span>Triangle Around Laser</span>
+                                </button>
+                                <button type="button" class="btn btn-default" data-shape="spreaded">
+                                    <img src="/img/spreaded.png" class="game-icon"><br>
+                                    <span>Spreaded</span>
+                                </button>
+                            </div>
+
                             <label for="name" class="col-md-4 control-label">Enter desired game name</label>
 
                             <div class="col-md-5">
@@ -62,6 +85,28 @@
 
     $(document).ready(function(){
 
+        var newGameSize = 10;
+        var newGameShape = "twoHorizontalLines";
+
+        $('.game-grid button').on('click', function(){
+            var thisBtn = $(this);
+            $('.game-grid button').removeClass('btn-primary')
+            $('.game-grid button').addClass('btn-default')
+            thisBtn.removeClass('btn-default')
+            thisBtn.addClass('btn-primary');
+            newGameSize = thisBtn.data('size');
+            console.log(newGameSize)
+        })
+
+        $('.game-shape button').on('click', function(){
+            var thisBtn = $(this);
+            $('.game-shape button').removeClass('btn-primary')
+            $('.game-shape button').addClass('btn-default')
+            thisBtn.removeClass('btn-default')
+            thisBtn.addClass('btn-primary');
+            newGameShape = thisBtn.data('shape');
+            console.log(newGameShape)
+        })
 
         $('#check').on('click',function(){
             if(buttonStatus == 'check'){
@@ -122,7 +167,9 @@
 
             var sendData = {
                 gameName: gameName,
-                userId: "{{ Auth::user()->id }}"
+                userId: "{{ Auth::user()->id }}",
+                size: newGameSize,
+                shape: newGameShape
             }
             $.post('{!! route('createGamePost') !!}', sendData, function(returnData){
                 console.log(returnData);

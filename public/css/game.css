@@ -84,6 +84,49 @@ canvas {
 
 .board{
     font-family: "Courier New";
+    display: none;
+}
+
+#game-creator .form-control{
+    margin-bottom: 5px;
+}
+
+.games-list a{
+    margin-left: 10px;
+}
+.games-list .label{
+    margin-right: 3px;
+}
+
+.game-name{
+    font-size: 1.5em;
+}
+
+.allow-delete-games{
+    margin-bottom: 5px;
+}
+.delete-game{
+    display: none;
+}
+.leave-game{
+    display: none;
+}
+.game-icon{
+    width: 70px;
+    height: 70px;
+}
+.game-icon-container{
+    float: left;
+    margin-right: 10px;
+    margin-top: 5px;
+    box-shadow: 1px 1px 5px rgba(0,0,0,.5) ;
+}
+.game-shape .btn{
+    width: 180px;
+}
+
+#movements{
+    text-align: center;
 }
 
 @media all and (max-width: 640px)
@@ -96,6 +139,22 @@ canvas {
     }
     .score-board{
         margin-top: 0;
+    }
+
+    .game-icon{
+        width: 80px;
+        height: 80px;
+    }
+
+    .game-shape .btn{
+        width: 100px;
+    }
+    .game-shape .btn .game-icon{
+        width: 60px;
+        height: 60px;
+    }
+    .game-shape .btn span{
+        display: none;
     }
 }
 
