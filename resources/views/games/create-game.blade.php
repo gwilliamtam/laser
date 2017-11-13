@@ -12,6 +12,7 @@
 
                         <div id="game-creator" class="form-group{{ $errors->has('gameName') ? ' has-error' : '' }}">
 
+                            <p>Select game size:</p>
                             <div class="form-group game-grid text-center">
                                 <button type="button" class="btn btn-default" data-size="8">8 x 8</button>
                                 <button type="button" class="btn btn-primary" data-size="10">10 x 10</button>
@@ -19,6 +20,7 @@
                                 <button type="button" class="btn btn-default" data-size="15">15 x 15</button>
                             </div>
 
+                            <p>Select game shape:</p>
                             <div class="form-group game-shape text-center">
                                 <button type="button" class="btn btn-primary" data-shape="twoHorizontalLines">
                                     <img src="/img/twoHorizontalLines.png" class="game-icon"><br>

@@ -433,15 +433,15 @@ function cycleTasks()
                             endGame();
                         }else{
                             if(returnData.lastMove.type == "m"){
-                                movementsMessage(returnData.lastMove.player, "moved a piece");
+                                movementsMessage(returnData.lastMove.player, "moved a piece "+calcTimeAgo(new Date(returnData.lastMove.created_at+" UTC").getTime(), Date.now()));
                             }
                             if(returnData.lastMove.type == "f"){
-                                movementsMessage(returnData.lastMove.player, "fired the laser");
+                                movementsMessage(returnData.lastMove.player, "fired the laser "+calcTimeAgo(new Date(returnData.lastMove.created_at+" UTC").getTime(), Date.now()));
                             }
                             if(returnData.lastMove.type == "r"){
-                                movementsMessage(returnData.lastMove.player, "rotate a piece");
+                                movementsMessage(returnData.lastMove.player, "rotate a piece "+calcTimeAgo(new Date(returnData.lastMove.created_at+" UTC").getTime(), Date.now()));
                             }
-                            // console.log(returnData.lastMove)
+                            console.log();
                             playerInTurn = nextInTurn(returnData.lastMove.player);
                         }
                     }
@@ -449,6 +449,25 @@ function cycleTasks()
 
             }
         });
+    }
+}
+
+function calcTimeAgo(timeStampOld, timeStampNew){
+    var diff = timeStampNew - timeStampOld;
+    var oneMinute = 1000*60;
+    var minutes = Math.round(diff/oneMinute);
+    if(isNaN(minutes)){
+        return "";
+    }
+    if(minutes==0){
+        return " just now";
+    }
+    if(minutes < 60){
+        return minutes + " minutes ago";
+    }else{
+        var hours = parseInt(minutes / 60);
+        var remaingingMin = Math.round( ((minutes / 60) - parseInt(minutes / 60)) * 60 );
+        return hours + " hours " + remaingingMin + " minutes ago";
     }
 }
 
@@ -521,29 +540,8 @@ function changePosition(data)
     });
     if(data.lastMove!=null){
 
-        // playerInTurn==this vs playerInTurm==other
-        // movement==thisPlayer vs movement!=thisPlayer
-
         var pieceIndex = piecesIndex[data.lastMove.piece_id];
         if(playerInTurn != null && pieces[pieceIndex].player != thisPlayer){
-            // if(data.lastMove.type == "m"){
-            //     console.log("willy");
-            //     board[colRowToIndex(pieces[pieceIndex].col,pieces[pieceIndex].row)].occupiedBy = null;
-            //     pieces[pieceIndex].col = data.lastMove.position.col;
-            //     pieces[pieceIndex].row = data.lastMove.position.row;
-            //     pieces[pieceIndex].direction = data.lastMove.position.direction;
-            //     var boardIndex = colRowToIndex(data.lastMove.position.col, data.lastMove.position.row);
-            //     var center = board[boardIndex].center();
-            //     if(pieces[pieceIndex].type == "mirror"){
-            //         pieces[pieceIndex].image.remove();
-            //         pieces[pieceIndex].image = createMirror(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
-            //     }
-            //     if(pieces[pieceIndex].type == "laser"){
-            //         pieces[pieceIndex].image.remove();
-            //         pieces[pieceIndex].image = createLaser(center.x, center.y, pieces[pieceIndex].player, data.lastMove.position.direction);
-            //     }
-            //     board[boardIndex].occupiedBy = parseInt(data.lastMove.piece_id);
-            // }
             if(data.lastMove.type == "f"){
                 hideControls(controls)
                 laserPaths = fire(data.lastMove.player, false);
