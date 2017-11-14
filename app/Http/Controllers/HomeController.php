@@ -25,7 +25,6 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-
         $queryGames = Game::where('player_a_id','=', Auth::user()->id)
             ->orWhere('player_b_id','=', Auth::user()->id)
             ->orderby('name');
@@ -54,4 +53,5 @@ class HomeController extends Controller
             "allowDelete" => $allowDelete
         ]);
     }
+
 }

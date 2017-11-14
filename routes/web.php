@@ -18,6 +18,7 @@ Route::get('/play', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index');
+Route::get('/howtoplay', 'PublicController@howToPlay')->name('howToPlay');
 
 Route::group(['prefix' => 'games'], function(){
     Route::get('create', 'GameController@createGame')->name('createGame');
@@ -29,9 +30,11 @@ Route::group(['prefix' => 'games'], function(){
     Route::post('lastShot', 'GameController@getLastShot');
     Route::post('delete', 'GameController@deletePost')->name('deleteGame');
     Route::post('leave', 'GameController@leavePost')->name('leaveGame');
+});
 
-
-
+Route::group(['middleware' => 'App\Http\Middleware\AdminMiddleware'], function() {
+    Route::get('/admin/users/list', 'AdminController@listUsers')->name('listUsers');
+    Route::get('/admin/users/view/{userId}', 'AdminController@viewUser')->name('viewUser');
 });
 
 // test

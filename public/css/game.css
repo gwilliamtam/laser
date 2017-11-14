@@ -129,6 +129,15 @@ canvas {
     text-align: center;
 }
 
+.users-table{
+    background-color: rgb(255,255,255);
+}
+
+.how-to dd, .how-to dt{
+    margin-bottom: 20px;
+}
+
+
 @media all and (max-width: 640px)
 {
     canvas{
