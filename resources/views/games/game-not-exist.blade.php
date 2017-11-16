@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title','Game not exists')
+
 @section('content')
     <div class="container">
         <div class="alert alert-danger" role="alert">

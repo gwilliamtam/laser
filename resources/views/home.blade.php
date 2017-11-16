@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title','List Games')
+
 @section('content')
     <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
     <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
@@ -78,6 +80,7 @@
                                 <span class="label label-info">{{ $gameSetup['colsMax'] }} x {{ $gameSetup['rowsMax'] }}</span>
                                 @if($gameStatus[$game->id] == "wait")
                                     <span class="label label-warning">Waiting for player to join game...</span>
+                                    <span class="label label-warning">Send the link to the other player: {!! url('/play') !!}/{{ $game->name }}</span>
                                 @endif
                                 @if($gameStatus[$game->id] == "ready")
                                     <span class="label label-success">Ready</span>

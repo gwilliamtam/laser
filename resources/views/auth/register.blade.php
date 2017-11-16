@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title','Register')
+
 @section('content')
 <div class="container">
     <div class="row">
@@ -67,8 +69,11 @@
 
                             </div>
                             <div class="col-md-6">
-                                Captcha is here commented out!
-                                {{--<div class="g-recaptcha" data-sitekey="{{ env('RE_CAP_SITE') }}"></div>--}}
+                                @if(env('APP_ENV')=='local')
+                                    Captcha is here commented out!
+                                @else
+                                    <div class="g-recaptcha" data-sitekey="{{ env('RE_CAP_SITE') }}"></div>
+                                @endif
                             </div>
                         </div>
 
@@ -85,5 +90,8 @@
         </div>
     </div>
 </div>
-{{--<script src='https://www.google.com/recaptcha/api.js'></script>--}}
+@if(env('APP_ENV')!='local')
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+@endif
+
 @endsection

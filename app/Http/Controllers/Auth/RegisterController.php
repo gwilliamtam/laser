@@ -49,15 +49,22 @@ class RegisterController extends Controller
      */
     protected function validator(array $data)
     {
-//        $data['captcha'] = $this->captchaCheck($data['g-recaptcha-response']);
+        if(env('APP_ENV') != 'local'){
+            $data['captcha'] = $this->captchaCheck($data['g-recaptcha-response']);
+        }
 
-        return Validator::make($data, [
+        $validatorData = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-//            'g-recaptcha-response'  => 'required',
-//            'captcha'               => 'required|min:1'
-        ]);
+            'password' => 'required|string|min:6|confirmed'
+        ];
+
+        if(env('APP_ENV') != 'local'){
+            $validatorData['g-recaptcha-response'] = 'required';
+            $validatorData['captcha'] = 'required|min:1';
+        }
+
+        return Validator::make($data, $validatorData);
     }
 
     /**

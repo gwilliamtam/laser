@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title','How To Play')
+
 @section('content')
 <div class="container">
     <div class="row">
@@ -10,7 +12,7 @@
                 <div class="panel-body">
 
                     <dl class="how-to">
-                        <p>Welcome to Willy Laser Chess. This is a personal project that I want to share with you. All your comments about this game are welcome. Have fun!</p>
+                        <p>Welcome to Laser Chess Game. This is a personal project that I want to share with you. All your comments about this game are welcome. Have fun!</p>
                         <dt>Register and Login</dt>
                         <dd>You need to register and login to play. Your email is your username and can be registered only once.</dd>
 

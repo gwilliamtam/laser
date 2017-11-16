@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title',$currentGame->name)
+
 @section('content')
     <div class="container">
         <script type="text/javascript" src="/js/paper-full.js"></script>

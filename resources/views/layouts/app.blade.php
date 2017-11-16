@@ -1,3 +1,10 @@
+@php
+$metaDescription = "Play Laser Chess Game online with your friends. Move your mirrors around the board and fire your laser to destroy your enemy. Like playing chess but with power!";
+$codeWords = "Laser Chess Game Online Strategy Mind Power Fire Shot Destroy Think";
+$pageTitle = "Laser Chess Game";
+@endphp
+
+
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -5,10 +12,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <META NAME="Description" CONTENT="{{ $metaDescription }}">
+    <META NAME="Keywords" CONTENT="{{ $metaDescription }}">
+    <META NAME="title" content="{{ $pageTitle }}">
+    <META NAME=DC.Title content="{{ $pageTitle }}">
+    <META http-equiv=title content="{{ $pageTitle }}">
+    <META http-equiv=keywords content="{{ $codeWords }}">
+    <META NAME=DC.Description content="{{ $metaDescription }}">
+    <META http-equiv=description content="{{ $metaDescription }}">
+    <META NAME="distribution" content="global">
+    <META NAME="revisit" content="30 days">
+    <META NAME="searchtitle" CONTENT="{{ $codeWords }}">
+
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Laser Chess</title>
+    <title>LaserChess - @yield('title')</title>
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
@@ -44,6 +66,7 @@
                     </ul>
 
                     <!-- Right Side Of Navbar -->
+                    @if ($__env->yieldContent('title')!='Page not found')
                     <ul class="nav navbar-nav navbar-right">
                         <!-- Authentication Links -->
                         @if (Auth::guest())
@@ -96,6 +119,7 @@
                             </li>
                         @endif
                     </ul>
+                    @endif
                 </div>
             </div>
         </nav>

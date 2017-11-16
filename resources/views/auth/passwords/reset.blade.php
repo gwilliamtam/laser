@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@yield('Reset')
+
 @section('content')
 <div class="container">
     <div class="row">
