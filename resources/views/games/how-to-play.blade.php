@@ -48,6 +48,9 @@
                         <dd><strong>Laser:</strong> You will have only one laser. Laser can move only one position in any direction (vertical, horizontal or diagonal). A laser movement finish your turn. A laser fire finish your turn. </dd>
                         <dd><strong>Mirror:</strong> A mirror can move one position in any direction (vertical, horizontal or diagonal). The flat area of a mirror will reflect your laser or the other player laser. The round area of the laser can absorb any laser without any damage. You can rotate any laser as many times you want without losing your turn. Moving a mirror will finish your turn.</dd>
 
+                        <dt>Robot 🤖</dt>
+                        <dd>Playing against the robot is currently in development. It will not give any fight for now, but at least will allow you to test the game without the need of another human player.</dd>
+
                         <dt>Objective</dt>
                         <dd>Hit the other player laser before you are hit. One hit and game over. Be careful, do not hit yourself.</dd>
 

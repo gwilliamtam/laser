@@ -62,6 +62,7 @@
             var playerAname = "{{$players['playerAname']}}";
             var playerBname = "{{$players['playerBname']}}";
             var usingRobot = false;
+            console.log(config);
             if(config.opponent && config.opponent == "robot"){
                 usingRobot = true;
             }

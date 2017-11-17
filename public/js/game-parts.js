@@ -977,6 +977,7 @@ function showBoardPieces()
 
 function requestRobotTurn()
 {
+        console.log('requestRobotTurn', usingRobot)
     if(usingRobot){
         $.ajaxSetup({
             headers: {
@@ -989,9 +990,9 @@ function requestRobotTurn()
             gameName: config.name
         };
         $.post('/games/robot', sendData, function(complete){
-            if(complete == 'true'){
-
-            }
+            // if(complete == 'true'){
+            //     console.log('request complete');
+            // }
         });
     }
 }

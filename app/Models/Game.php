@@ -17,8 +17,13 @@ class Game extends Model
     protected $table = "games";
     public $timestamps = false;
 
+    protected $moveDirectionsSymbolsLaser = array('n',   'e',   's',    'w',    'ne',  'se',  'sw',    'nw');
     protected $moveDirectionsSymbols = array('n',   'e',   's',    'w',    'ne',  'se',  'sw',    'nw');
     protected $moveDirections =        array([0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,-1], [-1,1]);
+    protected $moveDirectionsFront =  [
+        [0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,-1], [-1,1],
+        [1,0], [1,1], [-1,1], // Add a tendency to move to the north and advance
+    ];
 
 
     protected $redirectTo = '/';
@@ -335,6 +340,8 @@ class Game extends Model
                 $playerBPieces[] = [
                     'index' => $index,
                     'id' => $piece['id'],
+                    'type' => $piece['type'],
+                    'player' => $piece['player'],
                     'col' => $position->col,
                     'row' => $position->row,
                     'dir' => $position->direction
@@ -347,7 +354,8 @@ class Game extends Model
 
     public function robotRandomMovement(){
         $gameSetup = json_decode($this->setup, true);
-        $pieces = Piece::where('game_id', '=', $this->id)->get()->toArray();
+        $pieces = Piece::where('game_id', '=', $this->id)
+            ->get()->toArray();
 
         list($board, $playerBpieces) = $this->createBoard($gameSetup['size'], $pieces);
         $foundMove = false;
@@ -355,7 +363,8 @@ class Game extends Model
         $total = count($playerBIds)-1;
         while(!$foundMove){
             $pieceIndex = rand(0,$total);
-            list($dCol, $dRow) = $this->moveDirections[rand(0,7)];
+//            list($dCol, $dRow) = $this->moveDirections[rand(0,count($this->moveDirections)-1)];
+            list($dCol, $dRow) = $this->moveDirectionsFront[rand(0,count($this->moveDirectionsFront)-1)];
             $newCol = $playerBpieces[$pieceIndex]['col']-$dCol;
             $newRow = $playerBpieces[$pieceIndex]['row']-$dRow;
             if($newCol>=1 and $newCol<=$gameSetup['colsMax'] and $newRow>=1 and $newRow<=$gameSetup['rowsMax']){
@@ -374,8 +383,8 @@ class Game extends Model
 
 
                     // some times lets rotate the pieces
-                    if(rand(0,100)>50){
-                        $this->rotateAllRandomly($pieces);
+                    if(rand(0,100)>33){
+                        $this->rotateAllRandomly($playerBpieces);
                     }
                     $this->movePiece(json_encode($newPiece), "m");
                 }
@@ -385,16 +394,17 @@ class Game extends Model
 
     private function rotateAllRandomly($pieces)
     {
+//        var_dump($pieces);
+//        dd('die');
         foreach($pieces as $index => $piece){
-            $position = json_decode($piece['position']);
             // rotate only some of the pieces
-            if(rand(0,100)>50){
+            if(rand(0,100)>33){
                 $newPiece = [
                     'id' => $piece['id'],
                     'type' => $piece['type'],
                     'player' => $piece['player'],
-                    'col' => $position->col,
-                    'row' => $position->row,
+                    'col' => $piece['col'],
+                    'row' => $piece['row'],
                     'direction' => $this->rotatePieceRandomly($piece['type'])
                 ];
                 $this->movePiece(json_encode($newPiece), "m");
@@ -405,7 +415,7 @@ class Game extends Model
     private function rotatePieceRandomly($type)
     {
         if($type == 'laser'){
-            return $this->moveDirectionsSymbols[rand(0,3)];
+            return $this->moveDirectionsSymbolsLaser[rand(0,3)];
         }
         return $this->moveDirectionsSymbols[rand(0,7)];
     }
