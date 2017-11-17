@@ -530,7 +530,7 @@ function changePosition(data)
                 pieces[pieceIndex].image.remove();
                 pieces[pieceIndex].image = createMirror(center.x,center.y, retPiece.player, retPiece.position.direction);
             }
-            if(pieces[pieceIndex.type == "laser"]){
+            if(pieces[pieceIndex].type == "laser"){
                 pieces[pieceIndex].image.remove();
                 pieces[pieceIndex].image = createLaser(center.x,center.y, retPiece.player, retPiece.position.direction);
             }
@@ -708,6 +708,8 @@ function fire(player, save)
                 }else{
                     if(pieces[piecesIndex[boardSection.occupiedBy]].type == 'laser'){
                         // end game actions
+                        laserPaths.push(calcLaserPath(prev, next));
+                        laserSegment++;
                         laserOthers.push(pieces[piecesIndex[boardSection.occupiedBy]]);
                         calculateTrack = false;
                         gameOver = {
