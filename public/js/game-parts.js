@@ -33,14 +33,6 @@ function SetBoard()
         strokeColor: 'black'
     });
 
-    // board.first = function(){
-    //     return board[0];
-    // }
-    //
-    // board.last = function(){
-    //     return board[63];
-    // }
-
     return board;
 
 }
@@ -414,8 +406,11 @@ function cycleTasks()
         };
         $.post('/games/cycle', sendData, function(returnDataJson){
             var returnData = JSON.parse(returnDataJson);
+            console.log('last move was:', returnData);
+            if(returnData.lastMove != null){
+                console.log('last move was from: ', returnData.lastMove.player)
+            }
             if(returnData.complete == 'true'){
-
                     if(playerInTurn != thisPlayer){
                         changePosition(returnData);
                     }
@@ -441,8 +436,12 @@ function cycleTasks()
                             if(returnData.lastMove.type == "r"){
                                 movementsMessage(returnData.lastMove.player, "rotate a piece "+calcTimeAgo(new Date(returnData.lastMove.created_at+" UTC").getTime(), Date.now()));
                             }
-                            console.log();
                             playerInTurn = nextInTurn(returnData.lastMove.player);
+                            console.log("now the turn is for "+playerInTurn);
+                            if(playerInTurn == "b"){
+                                requestRobotTurn();
+                                console.log('requesting robot to play');
+                            }
                         }
                     }
 
@@ -974,4 +973,25 @@ function showBoardPieces()
         boardRow = "";
     }
     return boardText;
+}
+
+function requestRobotTurn()
+{
+    if(usingRobot){
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        var sendData = {
+            player: "b",
+            gameId: config.id,
+            gameName: config.name
+        };
+        $.post('/games/robot', sendData, function(complete){
+            if(complete == 'true'){
+
+            }
+        });
+    }
 }

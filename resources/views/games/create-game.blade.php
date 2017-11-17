@@ -38,6 +38,12 @@
                                 </button>
                             </div>
 
+                            <p>Select your opponent</p>
+                            <div class="form-group game-opponent text-center">
+                                <button type="button" class="btn btn-primary" data-opponent="human">Human</button>
+                                <button type="button" class="btn btn-default" data-opponent="robot">Robot</button>
+                            </div>
+
                             <label for="name" class="col-md-4 control-label">Enter desired game name</label>
 
                             <div class="col-md-5">
@@ -91,6 +97,7 @@
 
         var newGameSize = 10;
         var newGameShape = "twoHorizontalLines";
+        var newOpponent = "human";
 
         $('.game-grid button').on('click', function(){
             var thisBtn = $(this);
@@ -99,7 +106,6 @@
             thisBtn.removeClass('btn-default')
             thisBtn.addClass('btn-primary');
             newGameSize = thisBtn.data('size');
-            console.log(newGameSize)
         })
 
         $('.game-shape button').on('click', function(){
@@ -109,7 +115,15 @@
             thisBtn.removeClass('btn-default')
             thisBtn.addClass('btn-primary');
             newGameShape = thisBtn.data('shape');
-            console.log(newGameShape)
+        })
+
+        $('.game-opponent button').on('click', function(){
+            var thisBtn = $(this);
+            $('.game-opponent button').removeClass('btn-primary')
+            $('.game-opponent button').addClass('btn-default')
+            thisBtn.removeClass('btn-default')
+            thisBtn.addClass('btn-primary');
+            newOpponent = thisBtn.data('opponent');
         })
 
         $('#check').on('click',function(){
@@ -173,17 +187,23 @@
                 gameName: gameName,
                 userId: "{{ Auth::user()->id }}",
                 size: newGameSize,
-                shape: newGameShape
+                shape: newGameShape,
+                opponent: newOpponent
             }
             $.post('{!! route('createGamePost') !!}', sendData, function(returnData){
                 console.log(returnData);
+                var gameUrl = '{!! url('/play') !!}/'+$('#gameName').val();
+                if(returnData == 'true' && sendData.opponent == 'robot'){
+                    document.location = gameUrl;
+                }
+
                 if(returnData == 'true'){
                     $('#check').html('Game Created');
                     buttonStatus = 'created';
                     $('#check').attr('disabled','disabled');
                     $('#game-creator').hide();
 
-                    $('#link').val('{!! url('/play') !!}/'+$('#gameName').val()) ;
+                    $('#link').val(gameUrl) ;
                     $('.copy-link-container').show();
                 }else{
                     $('#check').html('Check');

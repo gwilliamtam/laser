@@ -17,6 +17,10 @@ class Game extends Model
     protected $table = "games";
     public $timestamps = false;
 
+    protected $moveDirectionsSymbols = array('n',   'e',   's',    'w',    'ne',  'se',  'sw',    'nw');
+    protected $moveDirections =        array([0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,-1], [-1,1]);
+
+
     protected $redirectTo = '/';
 
     public function exists($gameName){
@@ -28,16 +32,23 @@ class Game extends Model
         }
     }
 
-    public function create($gameName, $userId = null, $size=10, $shape){
-        $this->name = $gameName;
-        $this->player_a_id = $userId;
-        $this->player_b_id = null;
+    public function create($params){
+        $this->name =  $params['gameName'];
+        $this->player_a_id = $params['userId'];
+        if($params['opponent'] == 'robot'){
+            $robot = User::where('email', '=', 'robot@laserchessgame.com')->first();
+            $this->player_b_id = $robot->id;
+        }else{
+            $this->player_b_id = null;
+        }
+
         $this->setup = "default";
         $this->save();
 
-        $gameSetup = new GameSetup($gameName, $this->id);
-        $gameSetup->setSize($size);
-        $gameSetup->setShape($shape);
+        $gameSetup = new GameSetup($params['gameName'], $this->id);
+        $gameSetup->setSize($params['size']);
+        $gameSetup->setShape($params['shape']);
+        $gameSetup->setOpponent($params['opponent']);
         $gameSetup->create();
         $this->setup = json_encode($gameSetup->config);
         if($this->save()){
@@ -57,7 +68,7 @@ class Game extends Model
 
             }
             return true;
-        };
+        }
         return false;
     }
 
@@ -280,6 +291,123 @@ class Game extends Model
         }
 
         return $status;
+    }
+
+    public function movePiece($requestPiece, $requestType, $requestReason = null)
+    {
+        $movePiece = json_decode($requestPiece);
+        $position = [
+            "col" => $movePiece->col,
+            "row" => $movePiece->row,
+            "direction" => $movePiece->direction,
+        ];
+
+        $json_position = json_encode($position);
+
+        $piece = Piece::where('id', '=', $movePiece->id)->first();
+        $piece->position = $json_position;
+        $piece->save();
+
+        $move = new Move;
+        $move->type = $requestType;
+        $move->game_id = $piece->game_id;
+        $move->player = $movePiece->player;
+        $move->piece_id = $piece->id;
+        $move->created_at = date("Y-m-d H:i:s");
+        $move->position = empty($requestReason) ? $json_position : $requestReason;
+        $move->save();
+    }
+
+    public function createBoard($size, $pieces){
+        $playerBPieces = array();
+        $board = array();
+        for($col=1; $col<=$size; $col++){
+            $board[$col] = array();
+            for($row=1; $row<=$size; $row++){
+                $board[$col][$row] = null;
+            }
+        }
+
+        foreach($pieces as $index => $piece){
+            $position = json_decode($piece['position']);
+            $board[$position->col][$position->row] = $piece['id'];
+            if($piece['player']=='b'){
+                $playerBPieces[] = [
+                    'index' => $index,
+                    'id' => $piece['id'],
+                    'col' => $position->col,
+                    'row' => $position->row,
+                    'dir' => $position->direction
+                ];
+            }
+        }
+
+        return [$board,$playerBPieces];
+    }
+
+    public function robotRandomMovement(){
+        $gameSetup = json_decode($this->setup, true);
+        $pieces = Piece::where('game_id', '=', $this->id)->get()->toArray();
+
+        list($board, $playerBpieces) = $this->createBoard($gameSetup['size'], $pieces);
+        $foundMove = false;
+        $playerBIds = array_column($playerBpieces, 'index');
+        $total = count($playerBIds)-1;
+        while(!$foundMove){
+            $pieceIndex = rand(0,$total);
+            list($dCol, $dRow) = $this->moveDirections[rand(0,7)];
+            $newCol = $playerBpieces[$pieceIndex]['col']-$dCol;
+            $newRow = $playerBpieces[$pieceIndex]['row']-$dRow;
+            if($newCol>=1 and $newCol<=$gameSetup['colsMax'] and $newRow>=1 and $newRow<=$gameSetup['rowsMax']){
+                if($board[$newCol][$newRow] == null){
+                    $foundMove = true;
+                    $piece = Piece::where('id', '=', $playerBpieces[$pieceIndex]['id'])->first();
+
+                    $newPiece = [
+                        'id' => $piece->id,
+                        'type' => $piece->type,
+                        'player' => $piece->player,
+                        'col' => $newCol,
+                        'row' => $newRow,
+                        'direction' => $this->rotatePieceRandomly($piece->type)
+                    ];
+
+
+                    // some times lets rotate the pieces
+                    if(rand(0,100)>50){
+                        $this->rotateAllRandomly($pieces);
+                    }
+                    $this->movePiece(json_encode($newPiece), "m");
+                }
+            }
+        }
+    }
+
+    private function rotateAllRandomly($pieces)
+    {
+        foreach($pieces as $index => $piece){
+            $position = json_decode($piece['position']);
+            // rotate only some of the pieces
+            if(rand(0,100)>50){
+                $newPiece = [
+                    'id' => $piece['id'],
+                    'type' => $piece['type'],
+                    'player' => $piece['player'],
+                    'col' => $position->col,
+                    'row' => $position->row,
+                    'direction' => $this->rotatePieceRandomly($piece['type'])
+                ];
+                $this->movePiece(json_encode($newPiece), "m");
+            }
+        }
+    }
+
+    private function rotatePieceRandomly($type)
+    {
+        if($type == 'laser'){
+            return $this->moveDirectionsSymbols[rand(0,3)];
+        }
+        return $this->moveDirectionsSymbols[rand(0,7)];
     }
 
 }

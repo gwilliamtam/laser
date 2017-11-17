@@ -3,9 +3,6 @@
 @section('title','List Games')
 
 @section('content')
-    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
-
 <div class="container">
     <div class="row">
         <div class="col-md-10 col-md-offset-1">
@@ -67,7 +64,7 @@
                                     </div>
                                 @endif
 
-                                <span class="game-name">{{ $game->name }}</span>
+                                <a href="{!! url('/') !!}/play/{{$game->name}}"><span class="game-name">{{ $game->name }}</span></a>
                                 <br>
                                 @if(array_key_exists($game->player_a_id, $usersInGames))
                                     {{ $usersInGames[$game->player_a_id]['name'] }}

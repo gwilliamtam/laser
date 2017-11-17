@@ -13,6 +13,7 @@ class GameSetup
     public $game = null;
     public $size = null;
     public $shape = null;
+    public $opponent = null;
     public function __construct($game, $id)
     {
         $this->shape = 'twoHorizontalLines';
@@ -30,6 +31,12 @@ class GameSetup
     {
         $this->shape = $shape;
     }
+
+    public function setOpponent($opponent)
+    {
+        $this->opponent = $opponent;
+    }
+
     public function create()
     {
         $this->config = array (
@@ -43,6 +50,7 @@ class GameSetup
             'sectionHeight' => NULL,
             'shape' => $this->shape,
             'size' => $this->size,
+            'opponent' => $this->opponent,
             'board' =>
                 array (
                     'color1' => '#d0d0d0',

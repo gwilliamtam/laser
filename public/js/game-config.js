@@ -62,3 +62,4 @@ var playerInTurn = null; // current player in turn
 var selectedPieceId = null;
 var gameOver = null;
 var admin = true;
+var waitingForRobot = null;

@@ -41,7 +41,14 @@ class GameController extends Controller
     public function createGamePost(Request $request)
     {
         $game = New Game;
-        if($game->create($request->gameName, $request->userId, $request->size, $request->shape)){
+        $params = [
+            'gameName' => $request->gameName,
+            'userId' => $request->userId,
+            'size' => $request->size,
+            'shape' => $request->shape,
+            'opponent' => $request->opponent
+        ];
+        if($game->create($params)){
             return "true";
         }
 
@@ -156,27 +163,9 @@ class GameController extends Controller
     public function movePiecePost(Request $request)
     {
         if(!empty($request->piece and !empty($request->type))){
-            $movePiece = json_decode($request->piece);
-            $position = [
-                "col" => $movePiece->col,
-                "row" => $movePiece->row,
-                "direction" => $movePiece->direction,
-            ];
 
-            $json_position = json_encode($position);
-
-            $piece = Piece::where('id', '=', $movePiece->id)->first();
-            $piece->position = $json_position;
-            $piece->save();
-
-            $move = new Move;
-            $move->type = $request->type;
-            $move->game_id = $piece->game_id;
-            $move->player = $movePiece->player;
-            $move->piece_id = $piece->id;
-            $move->created_at = date("Y-m-d H:i:s");
-            $move->position = empty($request->reason) ? $json_position : $request->reason;
-            $move->save();
+            $game = new Game();
+            $game->movePiece($request->piece, $request->type);
 
             return 'true';
         }
@@ -197,5 +186,18 @@ class GameController extends Controller
         return $response;
     }
 
+
+    public function robotPlay(Request $request)
+    {
+        if(!empty($request->gameId) and !empty($request->gameName)){
+            $gameQuery = Game::where('id','=', $request->gameId)
+                ->where('name','=', $request->gameName);
+            if($gameQuery->count()>0){
+                $game = $gameQuery->first();
+                $game->robotRandomMovement();
+            }
+        }
+        return 'true';
+    }
 
 }

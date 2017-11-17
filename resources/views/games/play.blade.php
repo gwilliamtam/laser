@@ -61,6 +61,10 @@
             var thisPlayer = "{{$player}}";
             var playerAname = "{{$players['playerAname']}}";
             var playerBname = "{{$players['playerBname']}}";
+            var usingRobot = false;
+            if(config.opponent && config.opponent == "robot"){
+                usingRobot = true;
+            }
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
         <script type="text/javascript" src="/js/game-parts.js"></script>
@@ -169,7 +173,8 @@
                 }
 
                 view.onFrame = onFrame;
-
+                var robotWakeUpAlarms = 0;
+                var prevSecond = 0;
                 function onFrame(event) {
                     var second = parseInt(event.time);
                     var decasecond = parseInt(event.time*10);
@@ -199,7 +204,27 @@
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
                     }
+
+//                    if(usingRobot && playerInTurn == "b" && waitingForRobot == null){
+//                        console.log('looks like robot is sleep. I will wake it up soon!');
+//                        waitingForRobot = second + 30;
+//                    }
+
+//                    if(usingRobot && waitingForRobot != null){
+//                        if(second >= waitingForRobot){
+//                            waitingForRobot = null;
+//                            // remind robot than player turn A ends
+//                            console.log('requesting robot to play');
+//                            requestRobotTurn();
+//                        }
+//                    }
+
+                    if(prevSecond != second){
+                        prevSecond = second;
+                        // plase here anything you need done every second
+                    }
                 };
+
 
             }
 

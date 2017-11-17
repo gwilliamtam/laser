@@ -30,6 +30,7 @@ Route::group(['prefix' => 'games'], function(){
     Route::post('lastShot', 'GameController@getLastShot');
     Route::post('delete', 'GameController@deletePost')->name('deleteGame');
     Route::post('leave', 'GameController@leavePost')->name('leaveGame');
+    Route::post('robot', 'GameController@robotPlay');
 });
 
 Route::group(['middleware' => 'App\Http\Middleware\AdminMiddleware'], function() {
