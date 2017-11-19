@@ -406,7 +406,7 @@ function cycleTasks()
         };
         $.post('/games/cycle', sendData, function(returnDataJson){
             var returnData = JSON.parse(returnDataJson);
-            console.log('last move was:', returnData);
+            // console.log('last move was:', returnData);
             if(returnData.lastMove != null){
                 console.log('last move was from: ', returnData.lastMove.player)
             }

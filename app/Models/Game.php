@@ -83,6 +83,8 @@ class Game extends Model
         $gameSetup = new GameSetup($this->name, $this->id);
         $gameSetup->setSize($setup->size);
         $gameSetup->setShape($setup->shape);
+        $gameSetup->setOpponent($setup->opponent);
+
         $gameSetup->create();
         $this->setup = json_encode($gameSetup->config);
         Piece::where('game_id','=', $this->id)->delete();
@@ -358,38 +360,69 @@ class Game extends Model
             ->get()->toArray();
 
         list($board, $playerBpieces) = $this->createBoard($gameSetup['size'], $pieces);
-        $foundMove = false;
-        $playerBIds = array_column($playerBpieces, 'index');
-        $total = count($playerBIds)-1;
-        while(!$foundMove){
+
+        if(rand(0,100)>90){
+            // fire
+            $laser = null;
+            $laserIndex = null;
+            foreach($playerBpieces as $index => $piece){
+                if($piece['type'] == "laser"){
+                    $laser = $piece;
+                    $laserIndex = $index;
+                }
+            }
+            if(!empty($laser)){
+                $position = [
+                    'col' => $playerBpieces[$laserIndex]['col'],
+                    'row' => $playerBpieces[$laserIndex]['row'],
+                    'direction' => $this->rotatePieceRandomly('laser')
+                ];
+                $move = new Move();
+                $move->game_id = $this->id;
+                $move->piece_id = $playerBpieces[$laserIndex]['id'];
+                $move->player = 'b';
+                $move->type = 'f';
+                $move->created_at = date("Y-m-d H:i:s");
+                $move->position = json_encode($position);
+                $move->save();
+            }
+        }else{
+            // move
+            $foundMove = false;
+            $playerBIds = array_column($playerBpieces, 'index');
+            $total = count($playerBIds)-1;
             $pieceIndex = rand(0,$total);
-//            list($dCol, $dRow) = $this->moveDirections[rand(0,count($this->moveDirections)-1)];
-            list($dCol, $dRow) = $this->moveDirectionsFront[rand(0,count($this->moveDirectionsFront)-1)];
-            $newCol = $playerBpieces[$pieceIndex]['col']-$dCol;
-            $newRow = $playerBpieces[$pieceIndex]['row']-$dRow;
-            if($newCol>=1 and $newCol<=$gameSetup['colsMax'] and $newRow>=1 and $newRow<=$gameSetup['rowsMax']){
-                if($board[$newCol][$newRow] == null){
-                    $foundMove = true;
-                    $piece = Piece::where('id', '=', $playerBpieces[$pieceIndex]['id'])->first();
+            while(!$foundMove){
 
-                    $newPiece = [
-                        'id' => $piece->id,
-                        'type' => $piece->type,
-                        'player' => $piece->player,
-                        'col' => $newCol,
-                        'row' => $newRow,
-                        'direction' => $this->rotatePieceRandomly($piece->type)
-                    ];
+                list($dCol, $dRow) = $this->moveDirectionsFront[rand(0,count($this->moveDirectionsFront)-1)];
+                $newCol = $playerBpieces[$pieceIndex]['col']-$dCol;
+                $newRow = $playerBpieces[$pieceIndex]['row']-$dRow;
+                if($newCol>=1 and $newCol<=$gameSetup['colsMax'] and $newRow>=1 and $newRow<=$gameSetup['rowsMax']){
+                    if($board[$newCol][$newRow] == null){
+                        $foundMove = true;
+                        $piece = Piece::where('id', '=', $playerBpieces[$pieceIndex]['id'])->first();
+
+                        $newPiece = [
+                            'id' => $piece->id,
+                            'type' => $piece->type,
+                            'player' => $piece->player,
+                            'col' => $newCol,
+                            'row' => $newRow,
+                            'direction' => $this->rotatePieceRandomly($piece->type)
+                        ];
 
 
-                    // some times lets rotate the pieces
-                    if(rand(0,100)>33){
-                        $this->rotateAllRandomly($playerBpieces);
+                        // some times lets rotate the pieces
+                        if(rand(0,100)>33){
+                            $this->rotateAllRandomly($playerBpieces);
+                        }
+                        $this->movePiece(json_encode($newPiece), "m");
                     }
-                    $this->movePiece(json_encode($newPiece), "m");
                 }
             }
         }
+
+
     }
 
     private function rotateAllRandomly($pieces)

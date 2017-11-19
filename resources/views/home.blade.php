@@ -39,6 +39,10 @@
                         @endphp
                             <li class="list-group-item">
 
+                                @if($gameStatus[$game->id] == "over")
+                                    <a href="{!! route('restartGame', ['name'=>$game->name, 'id'=>$game->id]) !!}" class="btn btn-primary pull-right">Restart</a>
+                                @endif
+
                                 <a href="{!! url('/') !!}/play/{{$game->name}}" class="btn btn-primary pull-right">Play</a>
 
                                 @if(Auth::user()->id == $game->player_a_id)
