@@ -31,6 +31,11 @@
                         <p class="text-primary">List of existent games</p>
                     </div>
 
+                    <ul class="nav nav-tabs games-order">
+                        <li role="presentation" class="{{ empty($sort) || $sort == "name" ? 'active' : null }}"><a href="/">By Name</a></li>
+                        <li role="presentation" class="{{ !empty($sort) && $sort == "date" ? 'active' : null  }}"><a href="/?sort=date">By Creation Date</a></li>
+                    </ul>
+
                     <div class="clearfix"></div>
                     <ul class="list-group games-list">
                     @foreach($games as $game)
@@ -69,6 +74,7 @@
                                 @endif
 
                                 <a href="{!! url('/') !!}/play/{{$game->name}}"><span class="game-name">{{ $game->name }}</span></a>
+                                    ({{ $game->created_at }})
                                 <br>
                                 @if(array_key_exists($game->player_a_id, $usersInGames))
                                     {{ $usersInGames[$game->player_a_id]['name'] }}

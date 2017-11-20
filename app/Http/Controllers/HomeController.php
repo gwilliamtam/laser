@@ -26,8 +26,17 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $queryGames = Game::where('player_a_id','=', Auth::user()->id)
-            ->orWhere('player_b_id','=', Auth::user()->id)
-            ->orderby('name');
+            ->orWhere('player_b_id','=', Auth::user()->id);
+
+        if(empty($request->sort)){
+            $queryGames->orderby('name');
+        }
+        else{
+            if($request->sort == "date"){
+                $queryGames->orderby('created_at', 'asc');
+            }
+        }
+
 
         $usersInGames = array();
         $gameStatus = array();
@@ -46,12 +55,19 @@ class HomeController extends Controller
 //        $gameSetup->create();
 
         $allowDelete = empty($request->d) ? false : true;
-        return view('home', [
+
+        $viewData = [
             "games" => $games,
             "usersInGames" => $usersInGames,
             "gameStatus" => $gameStatus,
             "allowDelete" => $allowDelete
-        ]);
+        ];
+
+        if(!empty($request->sort)){
+            $viewData['sort'] = $request->sort;
+        }
+
+        return view('home', $viewData);
     }
 
 }

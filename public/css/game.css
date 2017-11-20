@@ -137,6 +137,10 @@ canvas {
     margin-bottom: 20px;
 }
 
+.games-order{
+    margin-bottom: 5px;
+}
+
 
 @media all and (max-width: 640px)
 {

@@ -56,7 +56,7 @@ class RegisterController extends Controller
         $validatorData = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed'
+            'password' => 'required|string|min:8|confirmed'
         ];
 
         if(env('APP_ENV') != 'local'){

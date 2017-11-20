@@ -85,6 +85,8 @@
                             </div>
                         </div>
                     </form>
+                    <hr>
+                    <p class="text-justify text-info">Your email and name are required only to provide you a login account and play. I do not have any interest, and will not share your email with any other organization. Your email will not be publish at any time. Do not share your password with anybody. Be wise to choose a good password long, hard to guess, and easy to remember.</p>
                 </div>
             </div>
         </div>

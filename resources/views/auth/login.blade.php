@@ -62,6 +62,8 @@
                                 </a>
                             </div>
                         </div>
+
+                        <p class="text-center"><a href="{!! url('/register') !!}">Sign up for a new account</a></p>
                     </form>
                 </div>
             </div>

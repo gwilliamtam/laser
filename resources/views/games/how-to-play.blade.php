@@ -64,7 +64,7 @@
                         <dd>Each account can have only three games.</dd>
 
                         <dt>Contact and Troubleshooting</dt>
-                        <dd>I am working in a forum, a contact form or any other type of messaging system and will be available soon.</dd>
+                        <dd>I am working in a forum, a contact form or any other type of messaging system and will be available soon. For now you can contact me through my Twitter account <a href="https://www.twitter.com/laserchessgame">@LaserChessGame</a></dd>
                     </dl>
 
                 </div>
