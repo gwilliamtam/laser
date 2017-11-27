@@ -144,6 +144,22 @@ class Game extends Model
 
     }
 
+    public function moves()
+    {
+        return $this->hasMany( 'App\Models\Move', 'game_id', 'id')->orderBy('created_at', 'desc');
+    }
+
+    public function player($player = "a")
+    {
+        if(in_array($player, ['a','b'])){
+            $key = 'player_' . $player . '_id';
+            return $this->hasMany( 'App\Models\User', 'id', $key);
+        }
+
+        return null;
+
+    }
+
     public function getTotalMoves()
     {
 
@@ -452,5 +468,6 @@ class Game extends Model
         }
         return $this->moveDirectionsSymbols[rand(0,7)];
     }
+
 
 }
