@@ -141,6 +141,14 @@ canvas {
     margin-bottom: 5px;
 }
 
+#user-view-tabs{
+    margin-bottom: 5px;
+}
+
+.player-row{
+    display: none;
+}
+
 
 @media all and (max-width: 640px)
 {

@@ -24,6 +24,12 @@ class Game extends Model
         [0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,-1], [-1,1],
         [1,0], [1,1], [-1,1], // Add a tendency to move to the north and advance
     ];
+    protected $moveTypes = array(
+        'm' => 'move',
+        'f' => 'fire',
+        'r' => 'rotate',
+        'o' => 'game over'
+    );
 
 
     protected $redirectTo = '/';
@@ -439,6 +445,11 @@ class Game extends Model
         }
 
 
+    }
+
+    public function getMoveTypes()
+    {
+        return $this->moveTypes;
     }
 
     private function rotateAllRandomly($pieces)
