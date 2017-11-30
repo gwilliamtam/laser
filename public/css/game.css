@@ -149,6 +149,10 @@ canvas {
     display: none;
 }
 
+#messages-zone{
+    height: 200px;
+    overflow:scroll;
+}
 
 @media all and (max-width: 640px)
 {

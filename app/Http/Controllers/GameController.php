@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\User;
 use URL;
@@ -198,6 +199,48 @@ class GameController extends Controller
             }
         }
         return 'true';
+    }
+
+    public function pushMessage(Request $request)
+    {
+        $forId = 0;
+        if(strpos($request->to, '@')>=0){
+            $user = User::where('email', '=', $request->to)->first();
+            if(!empty($user)){
+                $forId = $user->id;
+            }
+        }
+
+        $message = new Message();
+        $message->origin_type = $request->type;
+        $message->origin_id = $request->from;
+        $message->for_player_id = $forId;
+        $message->message = strip_tags($request->message);
+        $message->created_at = date("Y-m-d H:i:s");
+        $message->save();
+
+        return json_encode('true');
+    }
+
+    public function pullMessage(Request $request)
+    {
+        $messagesQuery = Message::where('for_player_id', '=', $request->userId)
+            ->where('created_at', '>=', date("Y-m-d H:i:s", time() - 60 * 60 * 24) )
+            ->orderBy('created_at', 'desc')
+            ->limit(100);
+
+        if($messagesQuery->count()>0){
+            $messages = $messagesQuery->get()->toArray();
+            return json_encode([
+                'complete' => 'true',
+                'messages' => $messages
+            ]);
+        }
+
+        return json_encode([
+            'complete' => 'true',
+            'messages' => null
+        ]);
     }
 
 }

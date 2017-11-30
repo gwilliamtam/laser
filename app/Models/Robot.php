@@ -29,7 +29,10 @@ class Robot extends Model
         $this->pieces = $this->getPieces();
         $this->board = $this->setBoard();
         $this->arrangePieces();
+    }
 
+    public function play()
+    {
         $this->moveType = $this->moveType();
 
         if($this->moveType = "m"){
@@ -37,11 +40,18 @@ class Robot extends Model
             $this->moveDirection = $this->moveDirection();
         }
 
-        if($this->movePiece['type'] == 'f'){
+        if($this->moveType == 'f'){
             $this->movePiece = $this->laser();
             $this->moveDirection = $this->fireDirection();
         }
 
+        // at this point we have defined movement type, piece to move and direction, so we can play
+        // we may return the movement
+        return [
+            'moveType' => $this->moveType,
+            'movePiece' => $this->movePiece,
+            'moveDirection' => $this->moveDirection
+        ];
     }
 
     /**
