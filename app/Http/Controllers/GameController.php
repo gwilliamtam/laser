@@ -203,30 +203,47 @@ class GameController extends Controller
 
     public function pushMessage(Request $request)
     {
-        $forId = 0;
-        if(strpos($request->to, '@')>=0){
-            $user = User::where('email', '=', $request->to)->first();
-            if(!empty($user)){
-                $forId = $user->id;
+        $game = Game::where('id', '=', $request->gameId)->first();
+        if(!empty($game)){
+
+            if($game->player_a_id == $request->from){
+                $forId = $game->player_b_id;
+            }else{
+                $forId = $game->player_a_id;
             }
+
+            $messageTime = date("Y-m-d H:i:s");
+
+            $message = new Message();
+            $message->game_id = $request->gameId;
+            $message->from_player_id = $request->from;
+            $message->for_player_id = $forId;
+            $message->message = strip_tags($request->message);
+            $message->created_at = $messageTime;
+            $message->save();
+            return json_encode('true');
         }
 
-        $message = new Message();
-        $message->origin_type = $request->type;
-        $message->origin_id = $request->from;
-        $message->for_player_id = $forId;
-        $message->message = strip_tags($request->message);
-        $message->created_at = date("Y-m-d H:i:s");
-        $message->save();
-
-        return json_encode('true');
+        return json_encode('false');
     }
 
     public function pullMessage(Request $request)
     {
-        $messagesQuery = Message::where('for_player_id', '=', $request->userId)
-            ->where('created_at', '>=', date("Y-m-d H:i:s", time() - 60 * 60 * 24) )
-            ->orderBy('created_at', 'desc')
+        $messagesQuery = Message::select('messages.game_id',
+            'messages.for_player_id', 'messages.from_player_id', 'messages.message', 'messages.created_at',
+            'users.email', 'users.name')
+            ->where('messages.game_id', '=', $request->gameId);
+
+
+        if($request->last == null) {
+            $messagesQuery->where('messages.created_at', '>=', date("Y-m-d H:i:s", time() - 60 * 60 * 24) );
+        } else {
+            $messagesQuery->where('messages.created_at', '>', $request->last);
+        }
+
+        $messagesQuery->leftJoin('users', 'users.id', '=', 'messages.from_player_id');
+
+        $messagesQuery->orderBy('messages.created_at', 'asc')
             ->limit(100);
 
         if($messagesQuery->count()>0){

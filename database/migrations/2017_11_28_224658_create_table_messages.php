@@ -15,9 +15,9 @@ class CreateTableMessages extends Migration
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->increments('id');
+            $table->integer('game_id');
             $table->integer('for_player_id');
-            $table->string('origin_type', 3);
-            $table->integer('origin_id');
+            $table->integer('from_player_id');
             $table->timestamp('created_at');
             $table->text('message');
             $table->index(['for_player_id','created_at']);
