@@ -77,11 +77,23 @@
                                     ({{ $game->created_at }})
                                 <br>
                                 @if(array_key_exists($game->player_a_id, $usersInGames))
+                                    @if($game->player_a_id != Auth::user()->id)
+                                        <a class="send-message-link" href="#" title="Send a message to user" data-email="{{ $usersInGames[$game->player_a_id]['email'] }}">
+                                    @endif
                                     {{ $usersInGames[$game->player_a_id]['name'] }}
+                                    @if($game->player_a_id != Auth::user()->id)
+                                        </a>
+                                    @endif
                                 @endif
                                 &nbsp;vs&nbsp;
                                 @if(array_key_exists($game->player_b_id, $usersInGames))
+                                    @if($game->player_b_id != Auth::user()->id)
+                                        <a class="send-message-link" href="#" title="Send a message to user" data-email="{{ $usersInGames[$game->player_b_id]['email'] }}">
+                                    @endif
                                     {{ $usersInGames[$game->player_b_id]['name'] }}
+                                    @if($game->player_b_id != Auth::user()->id)
+                                        </a>
+                                    @endif
                                 @endif
                                 <br>
                                 <span class="label label-info">{{ $gameSetup['colsMax'] }} x {{ $gameSetup['rowsMax'] }}</span>
@@ -106,6 +118,8 @@
         </div>
     </div>
 </div>
+
+@include("games.direct-messages")
 
 <script>
     $(document).ready(function(){
