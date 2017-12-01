@@ -9,6 +9,7 @@ use App\Models\GameSetup;
 use App\Models\Move;
 use App\Models\Piece;
 use App\Models\User;
+use App\Models\Message;
 use Log;
 use DB;
 
@@ -111,6 +112,16 @@ class Game extends Model
         }
 
         $this->save();
+
+        $messageTime = date("Y-m-d H:i:s");
+
+        $message = new Message();
+        $message->game_id = $this->id;
+        $message->from_player_id = 0;
+        $message->for_player_id = 0;
+        $message->message = "Game has been restarted. Click here to <a href='" . url('/play/'.$this->name) . "'>Play Again</a>";
+        $message->created_at = $messageTime;
+        $message->save();
     }
 
     public function readyToPlay()

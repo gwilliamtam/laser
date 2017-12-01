@@ -6,8 +6,7 @@
                 <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <h4 class="modal-title">Direct Messages</h4>
-                <h5 class="modal-subtitle">Game name and user here</h5>
+                <h4 class="modal-title">Game Messages Center</h4>
             </div>
             <div class="modal-body">
                 <div id="messages-zone"></div>
@@ -39,9 +38,7 @@
             gameInfo= link.data('game-info');
             gameId = gameInfo.id;
             $('.modal-title').html(gameInfo.name);
-            $('.modal-subtitle').html(gameInfo.playerName);
-
-            console.log('gameId', gameId);
+            console.log('gameInfo', gameInfo, 'gameId', gameId);
 
             $('#messages-modal').modal("show");
         });
@@ -51,10 +48,10 @@
             console.log('click');
             var message = $('#message-text').val();
             var from = '{{ Auth::user()->id }}';
-            sendMessage(from, gameId, message, gameId);
+            sendMessage(from, message, gameId);
         });
 
-        function sendMessage(from, to, message, gameId)
+        function sendMessage(from, message, gameId)
         {
             $.ajaxSetup({
                 headers: {
@@ -63,7 +60,6 @@
             });
             var sendData = {
                 from: from,
-                to: to,
                 message: message,
                 gameId: gameId
             };
@@ -76,8 +72,6 @@
             });
         }
 
-
-
         setInterval(function GetMessages()
         {
             var modalOpen = $('#messages-modal').hasClass('in');
@@ -89,6 +83,9 @@
                     }
                 });
                 var userId = '{{ Auth::user()->id }}';
+                var gameInfo= $('#messages-modal').attr('data-game');
+                var gameId = gameInfo.id;
+                console.log('gameInfo', gameInfo, 'gameId', gameId)
                 console.log('getting messages for game', gameId, 'last message at', last);
                 var sendData = {
                     gameId: gameId,

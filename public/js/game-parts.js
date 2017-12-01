@@ -425,7 +425,7 @@ function cycleTasks()
                             }
                             fireLastShot();
                             laserOn = true;
-                            endGame();
+                            // endGame();
                         }else{
                             if(returnData.lastMove.type == "m"){
                                 movementsMessage(returnData.lastMove.player, "moved a piece "+calcTimeAgo(new Date(returnData.lastMove.created_at+" UTC").getTime(), Date.now()));
@@ -945,9 +945,15 @@ function endGame()
 {
     activePlayer(null);
     $(".player-"+gameOver.winner).html(playerName(gameOver.winner)+" wins!");
-    $(".modal-title").html('GAME OVER');
-    $(".modal-body").html("<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason)
-    $("#game-modal").modal("show");
+    // $(".modal-title").html('GAME OVER');
+    // $(".modal-body").html("<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason)
+    // $("#game-modal").modal("show");
+
+    // console.log(config);
+    $('.modal-title').html(config.gameName);
+    $('#messages-modal').modal("show");
+    $('#messages-modal').attr("data-game", '{"id":"'+config.id+'", "name": "'+config.name+'"}');
+    $('#messages-zone').append("Game Over. "+"<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason);
 }
 
 function showBoardPieces()

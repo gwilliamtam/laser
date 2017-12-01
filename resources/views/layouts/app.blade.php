@@ -35,6 +35,8 @@ $pageTitle = "Laser Chess Game";
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/game.css') }}" rel="stylesheet">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
 
     <script src="{{ asset('js/jquery-3.2.1.js') }}"></script>
 
@@ -90,7 +92,7 @@ $pageTitle = "Laser Chess Game";
                                 </a>
                                 <ul class="dropdown-menu" role="menu">
 
-                                    @if(!empty($currentGame))
+                                    @if(!empty($currentGame) and $currentGame->player_a_id == Auth::user()->id)
                                         <li><a href="{{ route('restartGame', [$currentGame->name, $currentGame->id]) }}">Restart</a></li>
                                     @endif
                                     <li><a href="{{ route('createGame') }}">Create</a></li>

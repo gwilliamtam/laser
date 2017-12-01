@@ -31,30 +31,32 @@
         <div class="board">
         </div>
 
-        <div class="modal fade" id="game-modal">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title pull-left">Modal title</h5>
-                        <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Modal body text goes here.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <a type="button" class="btn btn-primary" href="{!! route('home') !!}">Back Home</a>
-                        @if($player == "a")
-                            <a type="button" class="btn btn-primary" href="{!! route('restartGame', [$currentGame->name, $currentGame->id]) !!}">Restart Game</a>
-                        @else
-                            <a type="button" class="btn btn-primary" href="{!! route('playGame', $currentGame->name) !!}">Back To Game</a>
-                        @endif
+        {{--<div class="modal fade" id="game-modal">--}}
+            {{--<div class="modal-dialog" role="document">--}}
+                {{--<div class="modal-content">--}}
+                    {{--<div class="modal-header">--}}
+                        {{--<h5 class="modal-title pull-left">Modal title</h5>--}}
+                        {{--<button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">--}}
+                            {{--<span aria-hidden="true">&times;</span>--}}
+                        {{--</button>--}}
+                    {{--</div>--}}
+                    {{--<div class="modal-body">--}}
+                        {{--<p>Modal body text goes here.</p>--}}
+                    {{--</div>--}}
+                    {{--<div class="modal-footer">--}}
+                        {{--<a type="button" class="btn btn-primary" href="{!! route('home') !!}">Back Home</a>--}}
+                        {{--@if($player == "a")--}}
+                            {{--<a type="button" class="btn btn-primary" href="{!! route('restartGame', [$currentGame->name, $currentGame->id]) !!}">Restart Game</a>--}}
+                        {{--@else--}}
+                            {{--<a type="button" class="btn btn-primary" href="{!! route('playGame', $currentGame->name) !!}">Back To Game</a>--}}
+                        {{--@endif--}}
                         {{--<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>--}}
-                    </div>
-                </div>
-            </div>
-        </div>
+                    {{--</div>--}}
+                {{--</div>--}}
+            {{--</div>--}}
+        {{--</div>--}}
+
+        @include("games.direct-messages");
 
         <script>
             var config = JSON.parse('{!! htmlspecialchars_decode($config)  !!}');

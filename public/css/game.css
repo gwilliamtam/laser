@@ -91,7 +91,7 @@ canvas {
     margin-bottom: 5px;
 }
 
-.games-list a{
+.games-list .btn{
     margin-left: 10px;
 }
 .games-list .label{
