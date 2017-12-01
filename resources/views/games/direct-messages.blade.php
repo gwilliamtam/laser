@@ -1,5 +1,5 @@
 
-<div class="modal fade" id="messages-modal" data-game="">
+<div class="modal fade" id="messages-modal" game-info="">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -35,8 +35,9 @@
 
             var link = $(this);
             console.log( link.data('game-info') )
-            gameInfo= link.data('game-info');
+            gameInfo= link.data('game-info'); // get game info from link clicked
             gameId = gameInfo.id;
+            $('#messages-modal').attr("game-info", '{"id":"'+gameInfo.id+'", "name": "'+gameInfo.name+'"}'); // put game info in modal
             $('.modal-title').html(gameInfo.name);
             console.log('gameInfo', gameInfo, 'gameId', gameId);
 
@@ -83,7 +84,7 @@
                     }
                 });
                 var userId = '{{ Auth::user()->id }}';
-                var gameInfo= $('#messages-modal').attr('data-game');
+                var gameInfo= JSON.parse($('#messages-modal').attr('game-info'));
                 var gameId = gameInfo.id;
                 console.log('gameInfo', gameInfo, 'gameId', gameId)
                 console.log('getting messages for game', gameId, 'last message at', last);
@@ -98,11 +99,16 @@
                             console.log(data.messages);
                             data.messages.forEach(function(row){
                                 if(last == null || row.created_at>last){
-                                    if(row.from_player_id == "{{ Auth::user()->id }}"){
-                                        var text = '<span class="light-text">You said</span>: ' + row.message + '<br>';
-                                    }else{
-                                        var text = '<span class="light-text">' + row.name + ' said</span>: ' + row.message + '<br>';
+                                    var messageSource = "Robot";
+                                    if (row.from_player_id != 0){
+                                        if(row.from_player_id == "{{ Auth::user()->id }}"){
+                                            messageSource = 'You';
+                                        }else{
+                                            messageSource = row.name;
+                                        }
                                     }
+
+                                    var text = '<span class="light-text">' + messageSource + ' said</span>: ' + row.message + '<br>';
 
                                     $('#messages-zone').append(text);
                                     last = row.created_at;

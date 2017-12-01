@@ -114,14 +114,26 @@ class Game extends Model
         $this->save();
 
         $messageTime = date("Y-m-d H:i:s");
+        $messageText = "Game has been restarted. Click here to <a href='" . url('/play/'.$this->name) . "'>Play Again</a>";
 
-        $message = new Message();
-        $message->game_id = $this->id;
-        $message->from_player_id = 0;
-        $message->for_player_id = 0;
-        $message->message = "Game has been restarted. Click here to <a href='" . url('/play/'.$this->name) . "'>Play Again</a>";
-        $message->created_at = $messageTime;
-        $message->save();
+        $messageQuery = Message::where('game_id', '=', $this->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(1);
+        if($messageQuery->count()>0){
+            $lastMessage = $messageQuery->first();
+            if ($lastMessage != $messageText){
+                $message = new Message();
+                $message->game_id = $this->id;
+                $message->from_player_id = 0;
+                $message->for_player_id = 0;
+                $message->message = $messageText;
+                $message->type = "temp";
+                $message->created_at = $messageTime;
+                $message->save();
+            }
+        }
+
+
     }
 
     public function readyToPlay()

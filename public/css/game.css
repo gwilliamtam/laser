@@ -11,10 +11,6 @@ body{
     margin-top: 50px;
     width: 100%;
 }
-.player-board{
-    width: 50%;
-    text-align: center;
-}
 .player-a{
     float: left;
 }
@@ -60,10 +56,17 @@ canvas {
 }
 
 .player-board{
+    width: 50%;
+    text-align: center;
+}
+.player-board{
     margin-bottom: 10px;
 }
 .player-board > div {
-    width: 200px;
+    width: 180px;
+    margin: 0 auto;
+}
+.player-messages{
     margin: 0 auto;
 }
 

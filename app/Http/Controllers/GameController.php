@@ -219,6 +219,7 @@ class GameController extends Controller
             $message->from_player_id = $request->from;
             $message->for_player_id = $forId;
             $message->message = strip_tags($request->message);
+            $message->type = "text";
             $message->created_at = $messageTime;
             $message->save();
             return json_encode('true');
@@ -229,34 +230,11 @@ class GameController extends Controller
 
     public function pullMessage(Request $request)
     {
-        $messagesQuery = Message::select('messages.game_id',
-            'messages.for_player_id', 'messages.from_player_id', 'messages.message', 'messages.created_at',
-            'users.email', 'users.name')
-            ->where('messages.game_id', '=', $request->gameId);
-
-
-        if($request->last == null) {
-            $messagesQuery->where('messages.created_at', '>=', date("Y-m-d H:i:s", time() - 60 * 60 * 24) );
-        } else {
-            $messagesQuery->where('messages.created_at', '>', $request->last);
-        }
-
-        $messagesQuery->leftJoin('users', 'users.id', '=', 'messages.from_player_id');
-
-        $messagesQuery->orderBy('messages.created_at', 'asc')
-            ->limit(100);
-
-        if($messagesQuery->count()>0){
-            $messages = $messagesQuery->get()->toArray();
-            return json_encode([
-                'complete' => 'true',
-                'messages' => $messages
-            ]);
-        }
+        $messages = Message::pullMessages($request->gameId, $request->last);
 
         return json_encode([
             'complete' => 'true',
-            'messages' => null
+            'messages' => $messages
         ]);
     }
 

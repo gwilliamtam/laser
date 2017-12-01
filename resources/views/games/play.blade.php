@@ -9,12 +9,14 @@
             <div class="score-board">
                 <div class="player-board player-a text-center">
                     <div>
-                    {{$players['playerAname']}} <span class="moves">{{$movesA}}</span>
+                    {{$players['playerAname']}}
+                        {{--<span class="moves">{{$movesA}}</span>--}}
                     </div>
                 </div>
                 <div class="player-board player-b text-center   ">
                     <div>
-                        {{$players['playerBname']}} <span class="moves">{{$movesB}}</span>
+                        {{$players['playerBname']}}
+                        {{--<span class="moves">{{$movesB}}</span>--}}
                     </div>
                 </div>
             </div>
@@ -23,6 +25,14 @@
         <div class="row">
             <div class="canvas-container text-center">
                 <canvas id="myCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="player-messages text-center">
+                <a class="send-message-link" href="#" data-game-info='{ "id": "{{ $currentGame->id }}", "name": "{{ $currentGame->name }}"}'>
+                    <span class="label label-primary"><i class="fa fa-envelope-o" aria-hidden="true"></i></span>
+                </a>
             </div>
         </div>
 

@@ -18,6 +18,7 @@ class CreateTableMessages extends Migration
             $table->integer('game_id');
             $table->integer('for_player_id');
             $table->integer('from_player_id');
+            $table->char('type', 4);
             $table->timestamp('created_at');
             $table->text('message');
             $table->index(['for_player_id','created_at']);

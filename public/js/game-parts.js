@@ -952,8 +952,8 @@ function endGame()
     // console.log(config);
     $('.modal-title').html(config.gameName);
     $('#messages-modal').modal("show");
-    $('#messages-modal').attr("data-game", '{"id":"'+config.id+'", "name": "'+config.name+'"}');
-    $('#messages-zone').append("Game Over. "+"<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason);
+    $('#messages-modal').attr("game-info", '{"id":"'+config.id+'", "name": "'+config.name+'"}');
+    $('#messages-zone').append("Game Over. "+"<strong>"+playerName(gameOver.winner)+' wins!</strong>'+"<br>"+gameOver.reason+"<br>");
 }
 
 function showBoardPieces()
