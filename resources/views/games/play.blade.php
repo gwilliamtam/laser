@@ -28,6 +28,8 @@
             </div>
         </div>
 
+        <div tabindex="0" id="control-popover" data-toggle="popover" data-placement="bottom" data-trigger="focus" title="Action" data-content="Controls" class="text-center"></div>
+
         <div class="row">
             <div class="player-messages text-center">
                 <a class="send-message-link" href="#" data-game-info='{ "id": "{{ $currentGame->id }}", "name": "{{ $currentGame->name }}"}'>
@@ -41,31 +43,6 @@
         <div class="board">
         </div>
 
-        {{--<div class="modal fade" id="game-modal">--}}
-            {{--<div class="modal-dialog" role="document">--}}
-                {{--<div class="modal-content">--}}
-                    {{--<div class="modal-header">--}}
-                        {{--<h5 class="modal-title pull-left">Modal title</h5>--}}
-                        {{--<button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">--}}
-                            {{--<span aria-hidden="true">&times;</span>--}}
-                        {{--</button>--}}
-                    {{--</div>--}}
-                    {{--<div class="modal-body">--}}
-                        {{--<p>Modal body text goes here.</p>--}}
-                    {{--</div>--}}
-                    {{--<div class="modal-footer">--}}
-                        {{--<a type="button" class="btn btn-primary" href="{!! route('home') !!}">Back Home</a>--}}
-                        {{--@if($player == "a")--}}
-                            {{--<a type="button" class="btn btn-primary" href="{!! route('restartGame', [$currentGame->name, $currentGame->id]) !!}">Restart Game</a>--}}
-                        {{--@else--}}
-                            {{--<a type="button" class="btn btn-primary" href="{!! route('playGame', $currentGame->name) !!}">Back To Game</a>--}}
-                        {{--@endif--}}
-                        {{--<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>--}}
-                    {{--</div>--}}
-                {{--</div>--}}
-            {{--</div>--}}
-        {{--</div>--}}
-
         @include("games.direct-messages");
 
         <script>
@@ -78,6 +55,7 @@
             if(config.opponent && config.opponent == "robot"){
                 usingRobot = true;
             }
+            var controlsPiece = null;
         </script>
         <script type="text/javascript" src="/js/game-config.js"></script>
         <script type="text/javascript" src="/js/game-parts.js"></script>
@@ -236,8 +214,8 @@
                         prevSecond = second;
                         // plase here anything you need done every second
                     }
-                };
 
+                };
 
             }
 

@@ -1,3 +1,5 @@
+/*jshint multistr: true */
+/*jshint esversion: 6 */
 
 function SetBoard()
 {
@@ -865,11 +867,94 @@ function MakeLaserControls()
     return controlBoard;
 }
 
+function paintControlContent(piece)
+{
+    controlsPiece = piece;
+    var content = `
+    <div class="button-container">
+    <button class="btn btn-primary" id="controls-rotate-left"><i class="fa fa-undo" aria-hidden="true"></i></button>
+    <button class="btn btn-primary" id="controls-rotate-right"><i class="fa fa-repeat" aria-hidden="true"></i></button>
+    <br>
+    `;
+    if(piece.type == "laser"){
+        content = content + '<button id="controls-button-fire" class="btn btn-danger text-center">Fire <i class="fa fa-fire" aria-hidden="true"></i></button><br>'
+    }
+    content = content + '<button id="controls-button-move" class="btn btn-primary text-center">Move <i class="fa fa-arrows" aria-hidden="true"></i></button><br>';
+    content = content + '</div>';
+
+    return content;
+}
+
 function showControl(piece, controls)
 {
     selectedPieceId = piece.id;
     hideControls(controls);
     var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
+
+    var popPlacer = $('#control-popover');
+    var canvasPosition = $('#myCanvas').position();
+    var canvasWidth = $('#myCanvas').width();
+    var popOverWidth = 150;
+    popPlacer.popover('show');
+    var popOver = $('#control-popover').next();
+    popOver.find('.popover-title').html('Select Action <button id="controls-button-close"><span aria-hidden="true">&times;</span></button>');
+    popOver.find('.popover-content').html(paintControlContent(piece));
+    var popLeft =  canvasPosition.left + controlsCenter.x - (popOverWidth / 2);
+    // to far to the left
+    if(popLeft < canvasPosition.left){
+        popLeft =  canvasPosition.left + 5;
+        var popArrowLeft = controlsCenter.x - 5;
+    }
+    // to far to the right
+    if(popLeft + popOverWidth > canvasWidth){
+        popLeft = canvasWidth - popOverWidth - 5;
+        var popArrowLeft = popOverWidth - (canvasWidth - controlsCenter.x) + 5;
+    }
+    var popTop = canvasPosition.top + controlsCenter.y + (config.sectionHeight / 2) - 5;
+    popOver.css({width: popOverWidth, left: popLeft,  top: popTop});
+    if(popArrowLeft){
+        popOver.find('.arrow').css('left', popArrowLeft)
+    }
+
+    popOver.find('#controls-button-close').on('click', function(){
+        $(document).find('#control-popover').popover('hide');
+    });
+    popOver.find('#controls-button-move').on('click', function(){
+        $(document).find('#control-popover').popover('hide');
+    });
+
+    console.log(controlsPiece);
+    if(piece.type == "laser"){
+        popOver.find('#controls-rotate-left').on('click', function(){
+            rotateLaser(piecesIndex[piece.id], piece, 'l', true);
+        });
+        popOver.find('#controls-rotate-right').on('click', function(){
+            rotateLaser(piecesIndex[piece.id], piece, 'r', true);
+        });
+        popOver.find('#controls-button-fire').on('click', function(){
+            if (draggingPiece) {
+                draggingPiece = false;
+            } else {
+                if (piece.type == 'laser') {
+                    hideControls(controls);
+                    laserOn = piece.player;
+                }
+            }
+        });
+    }
+    if(piece.type == "mirror"){
+        popOver.find('#controls-rotate-left').on('click', function(){
+            rotateMirror(piecesIndex[piece.id], piece, 'l', true);
+        });
+        popOver.find('#controls-rotate-right').on('click', function(){
+            rotateMirror(piecesIndex[piece.id], piece, 'r', true);
+        });
+    }
+
+
+
+
+
     if(piece.type == 'mirror'){
         controls.mirror.position = new Point(controlsCenter.x, controlsCenter.y);
         controls.mirror.visible = true;

@@ -161,6 +161,22 @@ canvas {
     color: silver;
 }
 
+.button-container{
+    margin: 0 auto;
+    text-align: center;
+}
+
+#controls-rotate-left{
+    margin-right: 5px;
+}
+#controls-rotate-left, #controls-rotate-right{
+    margin-bottom: 5px;
+}
+#controls-button-move, #controls-button-fire{
+    margin-bottom: 5px;
+}
+
+
 @media all and (max-width: 640px)
 {
     canvas{

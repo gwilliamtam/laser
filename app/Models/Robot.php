@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Game;
+use App\Models\Point;
+use App\Models\ShotRoute;
 
 class Robot extends Model
 {
@@ -31,8 +33,15 @@ class Robot extends Model
         $this->arrangePieces();
     }
 
+    /**
+     * Decide the robot next move. Will return the piece, type of movement (fire or move), direction and rotations
+     *
+     * @return array
+     */
     public function play()
     {
+        $this->posibleRoutes();
+
         $this->moveType = $this->moveType();
 
         if($this->moveType = "m"){
@@ -50,8 +59,39 @@ class Robot extends Model
         return [
             'moveType' => $this->moveType,
             'movePiece' => $this->movePiece,
-            'moveDirection' => $this->moveDirection
+            'moveDirection' => $this->moveDirection,
+            'rotations' => $this->rotations
         ];
+    }
+
+    public function posibleRoutes()
+    {
+        $route = new ShotRoute();
+        $point = new Point();
+        $point->col = $this->robotLaser->col;
+        $point->row = $this->robotLaser->row;
+
+        for($dirIndex=0; $dirIndex<=3; $dirIndex++){
+            $this->testShot($point, $dirIndex);
+        }
+
+    }
+
+    public function testShot($point, $dirIndex)
+    {
+        $newPoint = new Point();
+        $newPoint->col = $point->col + $this->dirValues[$dirIndex][0];
+        $newPoint->row = $point->row + $this->dirValues[$dirIndex][1];
+    }
+
+    /**
+     * Will return an array with all the rotations requested to be done
+     *
+     * @return array
+     */
+    public function setRotations()
+    {
+        return array();
     }
 
     /**
