@@ -76,7 +76,6 @@
         setInterval(function GetMessages()
         {
             var modalOpen = $('#messages-modal').hasClass('in');
-            console.log('messages modal open', modalOpen);
             if(modalOpen){
                 $.ajaxSetup({
                     headers: {

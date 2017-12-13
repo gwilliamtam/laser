@@ -116,7 +116,7 @@ function MakePieces()
     {
         var boardIndex = colRowToIndex(col, row);
 
-        if(boardIndex.occupiedBy == null){
+        if(boardIndex.occupiedBy == null) {
             var piece = {
                 id: id,
                 type: type,
@@ -124,13 +124,26 @@ function MakePieces()
                 row: row,
                 player: player,
                 direction: direction,
-                image: null
+                image: null,
+                standOut: function() {
+                    this.image.fillColor.hue += 2;
+                },
+                stopStandOut: function() {
+                    if (this.player == 'a') {
+                        this.image.fillColor = config.player.a.color;
+                    }
+                    if (this.player == 'b') {
+                        this.image.fillColor = config.player.b.color;
+                    }
+                }
             }
+            
             board[boardIndex].occupiedBy = piece.id;
             config.pieceId++;
             pieces.push(piece);
         }
     }
+
     pieces.setImage = function(pieceIndex, image)
     {
         pieces.forEach(function(piece, index){
@@ -410,7 +423,7 @@ function cycleTasks()
             var returnData = JSON.parse(returnDataJson);
             // console.log('last move was:', returnData);
             if(returnData.lastMove != null){
-                console.log('last move was from: ', returnData.lastMove.player)
+                // console.log('last move was from: ', returnData.lastMove.player)
             }
             if(returnData.complete == 'true'){
                     if(playerInTurn != thisPlayer){
@@ -544,7 +557,7 @@ function changePosition(data)
         var pieceIndex = piecesIndex[data.lastMove.piece_id];
         if(playerInTurn != null && pieces[pieceIndex].player != thisPlayer){
             if(data.lastMove.type == "f"){
-                hideControls(controls)
+                hideControls()
                 laserPaths = fire(data.lastMove.player, false);
                 laserMove = true;
             }
@@ -885,10 +898,15 @@ function paintControlContent(piece)
     return content;
 }
 
+
+
 function showControl(piece, controls)
 {
+    if(selectedPieceId != null){
+        pieces[piecesIndex[selectedPieceId]].stopStandOut();
+    }
     selectedPieceId = piece.id;
-    hideControls(controls);
+    // hideControls();
     var controlsCenter = board[colRowToIndex(piece.col, piece.row)].center();
 
     var popPlacer = $('#control-popover');
@@ -902,25 +920,32 @@ function showControl(piece, controls)
     var popLeft =  canvasPosition.left + controlsCenter.x - (popOverWidth / 2);
     // to far to the left
     if(popLeft < canvasPosition.left){
+        console.log('far to the left');
         popLeft =  canvasPosition.left + 5;
         var popArrowLeft = controlsCenter.x - 5;
     }
     // to far to the right
-    if(popLeft + popOverWidth > canvasWidth){
-        popLeft = canvasWidth - popOverWidth - 5;
-        var popArrowLeft = popOverWidth - (canvasWidth - controlsCenter.x) + 5;
+    if(popLeft + popOverWidth > canvasPosition.left + canvasWidth){
+        console.log('far to the right', popLeft + popOverWidth , canvasPosition.left + canvasWidth);
+        popLeft = canvasPosition.left + canvasWidth - popOverWidth - 15;
+        var popArrowLeft = popOverWidth - (canvasWidth - controlsCenter.x) + 15;
     }
-    var popTop = canvasPosition.top + controlsCenter.y + (config.sectionHeight / 2) - 5;
+    // var popTop = canvasPosition.top + controlsCenter.y + (config.sectionHeight / 2) - 5;
+    var popTop = canvasPosition.top + controlsCenter.y;
+    console.log('width', popOverWidth, 'left', popLeft,  'top', popTop, 'arrowLeft', popArrowLeft);
     popOver.css({width: popOverWidth, left: popLeft,  top: popTop});
     if(popArrowLeft){
         popOver.find('.arrow').css('left', popArrowLeft)
     }
 
     popOver.find('#controls-button-close').on('click', function(){
-        $(document).find('#control-popover').popover('hide');
+        pieces[piecesIndex[selectedPieceId]].stopStandOut();
+        selectedPieceId = null;
+        hideControls();
     });
     popOver.find('#controls-button-move').on('click', function(){
-        $(document).find('#control-popover').popover('hide');
+        // $(document).find('#control-popover').popover('hide');
+        hideControls();
     });
 
     console.log(controlsPiece);
@@ -936,7 +961,8 @@ function showControl(piece, controls)
                 draggingPiece = false;
             } else {
                 if (piece.type == 'laser') {
-                    hideControls(controls);
+                    // $(document).find('#control-popover').popover('hide');
+                    hideControls();
                     laserOn = piece.player;
                 }
             }
@@ -955,23 +981,25 @@ function showControl(piece, controls)
 
 
 
-    if(piece.type == 'mirror'){
-        controls.mirror.position = new Point(controlsCenter.x, controlsCenter.y);
-        controls.mirror.visible = true;
-        controls.mirror.moveAbove(piece.image);
-    }
-    if(piece.type == 'laser'){
-        controls.laser.position = new Point(controlsCenter.x, controlsCenter.y);
-        controls.laser.visible = true;
-        controls.laser.moveAbove(piece.image);
-    }
+    // if(piece.type == 'mirror'){
+    //     controls.mirror.position = new Point(controlsCenter.x, controlsCenter.y);
+    //     controls.mirror.visible = true;
+    //     controls.mirror.moveAbove(piece.image);
+    // }
+    // if(piece.type == 'laser'){
+    //     controls.laser.position = new Point(controlsCenter.x, controlsCenter.y);
+    //     controls.laser.visible = true;
+    //     controls.laser.moveAbove(piece.image);
+    // }
 
 }
 
-function hideControls(controls)
+// function hideControls(controls)
+function hideControls()
 {
-    controls.mirror.visible = false;
-    controls.laser.visible = false;
+    // controls.mirror.visible = false;
+    // controls.laser.visible = false;
+    $(document).find('#control-popover').popover('hide');
 }
 
 function validMovement(id, col, row )

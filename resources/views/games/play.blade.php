@@ -102,51 +102,17 @@
                             }
                             if(piece!=null){
                                 if(piece.player == thisPlayer){
-                                    if (piece.type == 'mirror') {
-                                        offLaser(laserPaths);
-                                        showControl(piece, controls);
-                                        controls.mirror.children[0].onClick = function (event) {
-                                            hideControls(controls);
-                                        }
-                                        controls.mirror.children[1].onClick = function (event) {
-                                            rotateMirror(index, piece, 'l', true);
-                                        }
-                                        controls.mirror.children[2].onClick = function (event) {
-                                            rotateMirror(index, piece, 'r', true);
-                                        }
-                                    }
-                                    if (piece.type == 'laser') {
-                                        offLaser(laserPaths);
-                                        showControl(piece, controls);
-                                        controls.laser.children[0].onClick = function (event) {
-                                            hideControls(controls);
-                                        }
-                                        controls.laser.children[1].onClick = function (event) {
-                                            rotateLaser(index, piece, 'l', true);
-                                        }
-                                        controls.laser.children[2].onClick = function (event) {
-                                            rotateLaser(index, piece, 'r',true);
-                                        }
-                                        controls.laser.children[3].onClick = function (event) {
-                                            if (draggingPiece) {
-                                                draggingPiece = false;
-                                            } else {
-                                                if (piece.type == 'laser') {
-                                                    hideControls(controls);
-                                                    laserOn = piece.player;
-                                                }
-                                            }
-                                        }
-                                    }
+                                    offLaser(laserPaths);
+                                    showControl(piece, controls);
                                 }else{
                                     blinkPlayers(thisPlayer);
                                 }
 
                             }else{
-                                hideControls(controls);
-
+                                hideControls();
                                 if(playerInTurn == thisPlayer){
                                     if(selectedPieceId!=null){
+                                        pieces[piecesIndex[selectedPieceId]].stopStandOut();
                                         if(validMovement(selectedPieceId, clickedPosition.col, clickedPosition.row )){
                                             movePiece(selectedPieceId, clickedPosition.col, clickedPosition.row);
                                             saveMove("m", piecesIndex[selectedPieceId]);
@@ -171,7 +137,7 @@
                     var decasecond = parseInt(event.time*10);
 
                     if(laserOn !== null && laserStop === null){
-                        hideControls(controls)
+                        hideControls()
                         laserPaths = fire(laserOn, true);
                         laserStop = second + 5;
                     }
@@ -186,6 +152,10 @@
                         drawLaser();
                     }
 
+                    if(selectedPieceId != null){
+                        pieces[piecesIndex[selectedPieceId]].standOut();
+                    }
+
                     if(laserMove === true){
                         laserMove = null;
                         laserStop = second + 5;
@@ -195,20 +165,6 @@
                         cycleExpire = cycleExpire + config.cycle;
                         cycleTasks();
                     }
-
-//                    if(usingRobot && playerInTurn == "b" && waitingForRobot == null){
-//                        console.log('looks like robot is sleep. I will wake it up soon!');
-//                        waitingForRobot = second + 30;
-//                    }
-
-//                    if(usingRobot && waitingForRobot != null){
-//                        if(second >= waitingForRobot){
-//                            waitingForRobot = null;
-//                            // remind robot than player turn A ends
-//                            console.log('requesting robot to play');
-//                            requestRobotTurn();
-//                        }
-//                    }
 
                     if(prevSecond != second){
                         prevSecond = second;
