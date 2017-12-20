@@ -33,6 +33,8 @@ Route::group(['prefix' => 'games'], function(){
     Route::post('robot', 'GameController@robotPlay');
     Route::post('message/push', 'GameController@pushMessage');
     Route::post('message/pull', 'GameController@pullMessage');
+
+    Route::get('robot/play/{gameName}', 'GameController@testRobot');
 });
 
 Route::group(['middleware' => 'App\Http\Middleware\AdminMiddleware'], function() {

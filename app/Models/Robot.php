@@ -20,9 +20,23 @@ class Robot extends Model
     private $movePiece = null;
     private $moveDirection = null;
     private $moveType = null;
+    private $rutas = array();
 
-    protected $dirSymbols = array('n',   'e',   's',    'w',    'ne',  'se',  'sw',    'nw');
-    protected $dirValues  = array([0,1], [1,0], [0,-1], [-1,0], [1,1], [1,-1], [-1,-1], [-1,1]);
+    private $dirSymbols = array('n',   'e',   's',    'w',    'ne',   'se',  'sw',    'nw');
+    private $dirValues  = array([0,-1], [1,0], [0,1], [-1,0], [1,-1], [1,1], [-1,1], [-1,-1]);
+
+    private $posiblesDirecciones = array(
+        'n' => [ 0,-1],
+        'e' => [ 1, 0],
+        's' => [ 0, 1],
+        'w' => [-1, 0]
+    );
+    private $opposite = array(
+        'n' => 's',
+        's' => 'n',
+        'e' => 'w',
+        'w' => 'e',
+    );
 
     public function __construct(Game $game)
     {
@@ -40,59 +54,144 @@ class Robot extends Model
      */
     public function play()
     {
-        $this->posibleRoutes();
+        $laserPosition = json_decode($this->robotLaser['position'], true);
+        $this->generateRoutes(
+            0,
+            $laserPosition['col'],
+            $laserPosition['row']
+        );
 
-        $this->moveType = $this->moveType();
+        dd($this->rutas);
 
-        if($this->moveType = "m"){
-            $this->movePiece = $this->pieceToMove();
-            $this->moveDirection = $this->moveDirection();
+//        $this->possibleRoutes();
+
+//        $this->moveType = $this->moveType();
+//
+//        if($this->moveType = "m"){
+//            $this->movePiece = $this->pieceToMove();
+//            $this->moveDirection = $this->moveDirection();
+//        }
+//
+//        if($this->moveType == 'f'){
+//            $this->movePiece = $this->laser();
+//            $this->moveDirection = $this->fireDirection();
+//        }
+//
+//        // at this point we have defined movement type, piece to move and direction, so we can play
+//        // we may return the movement
+//        return [
+//            'moveType' => $this->moveType,
+//            'movePiece' => $this->movePiece,
+//            'moveDirection' => $this->moveDirection,
+//            'rotations' => $this->rotations
+//        ];
+    }
+
+    public function generateRoutes($parent = 0, $col, $row, $from = null)
+    {
+        $node = array(
+            'parent' => $parent,
+            'from' => $from,
+            'col' => $col,
+            'row' => $row,
+            'dirs' => array()
+        );
+        array_push($this->rutas, $node);
+        $pointer = count($this->rutas)-1;
+        if($pointer>100){
+            foreach($this->rutas as $key => $ruta){
+                echo $key . ' ' . $ruta['from']  . ' ' . $ruta['parent'] . ' ' . $ruta['col'] . ' ' . $ruta['row'] . '<br>';
+            }
+            die('I just die');
         }
+        foreach ($this->posiblesDirecciones as $key => $pair){
+            if($from == null or $this->opposite[$from] != $key){
+                if($this->validRoute($col, $row, $pair)){
+                    $newPos = $this->getNewPosition($col, $row, $pair);
+                    $node['dirs'][$key] = $this->generateRoutes($pointer, $newPos['row'], $newPos['col'], $key);
+                }
 
-        if($this->moveType == 'f'){
-            $this->movePiece = $this->laser();
-            $this->moveDirection = $this->fireDirection();
+            }
         }
+        return $pointer;
+    }
 
-        // at this point we have defined movement type, piece to move and direction, so we can play
-        // we may return the movement
+    public function validRoute($col, $row, $dirArr)
+    {
+        $newCol = $col + $dirArr[0];
+        $newRow = $row + $dirArr[1];
+        if( $newCol >= 1 and $newCol <= intval($this->setup['colsMax']) and
+            $newRow >= 1 and $newRow <= intval($this->setup['rowsMax']) )
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public function getNewPosition($col, $row, $dirArr)
+    {
         return [
-            'moveType' => $this->moveType,
-            'movePiece' => $this->movePiece,
-            'moveDirection' => $this->moveDirection,
-            'rotations' => $this->rotations
+            'col' => $col + $dirArr[0],
+            'row' => $row + $dirArr[1]
         ];
+
     }
 
-    public function posibleRoutes()
+    public function possibleRoutes()
     {
-        $route = new ShotRoute();
-        $point = new Point();
-        $point->col = $this->robotLaser->col;
-        $point->row = $this->robotLaser->row;
+        $laserRoutes = $this->getRoutes($this->robotLaser);
+        $laserPosition = json_decode($this->robotLaser['position'], true);
 
-        for($dirIndex=0; $dirIndex<=3; $dirIndex++){
-            $this->testShot($point, $dirIndex);
+        $routes = array();
+        $routes[0] = new RouteNode(0, $laserPosition['col'], $laserPosition['row'], $laserRoutes);
+
+        dd($laserRoutes, $routes);
+
+    }
+
+
+    public function getRoutes($pieceInBoard = null, $locationInBoard = null)
+    {
+        $routesJson = null;
+
+        if($pieceInBoard == null){
+
+        }else{
+            $dirSymbolsLimit = 0;
+            if($pieceInBoard['type'] == 'laser'){
+                $dirSymbolsLimit = 3; // first four
+            }
+            if($pieceInBoard['type'] == 'mirror'){
+                $dirSymbolsLimit = 7; // first eight
+            }
+            $routesArray = array();
+            $position = json_decode($pieceInBoard['position'], true);
+            for($i=0; $i<=$dirSymbolsLimit; $i++){
+                $destinationCol = $position['col'] + $this->dirValues[$i][0];
+                $destinationRow = $position['row'] + $this->dirValues[$i][1];
+                // first check if past margins
+                if( $destinationCol >= 1 and $destinationCol <= intval($this->setup['colsMax']) and
+                    $destinationRow >= 1 and $destinationRow <= intval($this->setup['rowsMax']) )
+                {
+                    array_push($routesArray, $this->dirSymbols[$i]);
+                }
+            }
+            $routesJson = json_encode($routesArray);
         }
 
+        return $routesJson;
     }
 
-    public function testShot($point, $dirIndex)
-    {
-        $newPoint = new Point();
-        $newPoint->col = $point->col + $this->dirValues[$dirIndex][0];
-        $newPoint->row = $point->row + $this->dirValues[$dirIndex][1];
-    }
 
     /**
      * Will return an array with all the rotations requested to be done
      *
      * @return array
      */
-    public function setRotations()
-    {
-        return array();
-    }
+//    public function setRotations()
+//    {
+//        return array();
+//    }
 
     /**
      * Decide what type of move do
@@ -100,12 +199,12 @@ class Robot extends Model
      *
      * @return char(1)
      */
-    private function moveType()
-    {
-        // to decide if I want to move or fire I need to check first if I have a good shot
-        // so first I will check the route of firing
-        return $type;
-    }
+//    private function moveType()
+//    {
+//        // to decide if I want to move or fire I need to check first if I have a good shot
+//        // so first I will check the route of firing
+//        return $type;
+//    }
 
     /**
      * Decide what piece move.
@@ -113,9 +212,9 @@ class Robot extends Model
      *
      * @return array
      */
-    private function pieceToMove(){
-        return $piece;
-    }
+//    private function pieceToMove(){
+//        return $piece;
+//    }
 
     /**
      * Decide what direction move the piece selected
@@ -124,9 +223,9 @@ class Robot extends Model
      *
      * @return char(1)
      */
-    private function moveDirection(){
-        return $direction;
-    }
+//    private function moveDirection(){
+//        return $direction;
+//    }
 
 
     /**
@@ -135,9 +234,9 @@ class Robot extends Model
      *
      * @return char(1)
      */
-    private function fireDirection(){
-        return $direction;
-    }
+//    private function fireDirection(){
+//        return $direction;
+//    }
 
     /**
      * Get pieces in game and put in array
@@ -146,8 +245,9 @@ class Robot extends Model
      */
     private function getPieces()
     {
-        $pieces = Piece::where('game_id', '=', $this->id)
+        $pieces = Piece::where('game_id', '=', $this->game->id)
             ->get()->toArray();
+
         return $pieces;
     }
 

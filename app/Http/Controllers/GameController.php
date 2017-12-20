@@ -9,6 +9,7 @@ use URL;
 use App\Models\Game;
 use App\Models\Piece;
 use App\Models\Move;
+use App\Models\Robot;
 use Auth;
 
 class GameController extends Controller
@@ -236,6 +237,15 @@ class GameController extends Controller
             'complete' => 'true',
             'messages' => $messages
         ]);
+    }
+
+    public function testRobot(Request $request)
+    {
+        $game = Game::where('name', '=', $request->gameName)->first();
+        $robot = new Robot($game);
+
+        $robot->play();
+
     }
 
 }
